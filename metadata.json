@@ -1,0 +1,6 @@
+{
+  "name": "PhysioGemini",
+  "description": "An elite physiology mastery engine powered by Gemini AI, based on the Berne & Levy curriculum. Features mechanistic quizzes, clinical cases, and deep explanations with a cosmic Gemini aesthetic.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["AI-powered learning", "Medical education", "Mechanism-based quizzes"]
+}
