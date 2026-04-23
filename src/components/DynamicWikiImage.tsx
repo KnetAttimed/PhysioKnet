@@ -63,13 +63,47 @@ export function DynamicWikiImage({ title, onExpand }: DynamicWikiImageProps) {
     );
   }
 
+  const stripHtml = (html: string) => {
+    return html.replace(/<[^>]*>?/gm, '');
+  };
+
+  const cleanTitle = title.replace(/_/g, ' ');
+  const displayTitle = data?.displaytitle ? stripHtml(data.displaytitle) : cleanTitle;
+
   if (error || (!data?.thumbnail && !data?.originalimage)) {
+    const fallbackUrl = `https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&q=80&w=800&q=${encodeURIComponent(cleanTitle)}`;
+    
     return (
-      <div className="w-full p-6 bg-red-500/5 rounded-3xl border border-red-500/10 my-6 flex flex-col items-center gap-3">
-        <Globe className="w-8 h-8 text-red-500/30" />
-        <div className="text-center">
-          <div className="text-xs font-bold text-red-400 uppercase tracking-widest mb-1">Diagram Search Failed</div>
-          <div className="text-[10px] text-gray-500 font-sans italic">Resource "{title}" not found in Neural Index</div>
+      <div className="group/wiki my-6 relative max-w-2xl mx-auto">
+        <div className="glass-card rounded-2xl overflow-hidden border border-white/5 hover:border-gemini-blue/30 transition-all shadow-xl">
+          <div className="relative bg-black/40 min-h-[150px] flex items-center justify-center">
+            <img 
+              src={fallbackUrl} 
+              alt={cleanTitle}
+              className="w-full h-auto max-h-[500px] object-contain group-hover/wiki:scale-[1.02] transition-transform duration-700 opacity-80"
+              referrerPolicy="no-referrer"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+            <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+              <div className="flex-1 mr-4">
+                <div className="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-1 italic">Neural Fallback Diagram</div>
+                <h4 className="text-sm font-bold text-white truncate font-sans">{cleanTitle}</h4>
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => onExpand?.(fallbackUrl)}
+                  className="p-2 bg-white/10 backdrop-blur-md rounded-xl text-white hover:bg-white/20 transition-colors border border-white/10"
+                >
+                  <Maximize2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="mt-3 px-6 py-2 border-l-2 border-amber-500/30 italic">
+          <p className="text-[11px] text-gray-500 font-sans leading-relaxed line-clamp-2">
+            Wikipedia entry not found for "{cleanTitle}". Displaying conceptual fallback from Neural Index.
+          </p>
         </div>
       </div>
     );
@@ -84,7 +118,7 @@ export function DynamicWikiImage({ title, onExpand }: DynamicWikiImageProps) {
         <div className="relative bg-black/40 min-h-[150px] flex items-center justify-center">
           <img 
             src={imageUrl} 
-            alt={title}
+            alt={cleanTitle}
             className="w-full h-auto max-h-[500px] object-contain group-hover/wiki:scale-[1.02] transition-transform duration-700"
             referrerPolicy="no-referrer"
           />
@@ -94,7 +128,7 @@ export function DynamicWikiImage({ title, onExpand }: DynamicWikiImageProps) {
           <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end translate-y-4 opacity-0 group-hover/wiki:translate-y-0 group-hover/wiki:opacity-100 transition-all duration-300">
             <div className="flex-1 mr-4">
               <div className="text-[10px] font-bold text-gemini-cyan uppercase tracking-widest mb-1">Wiki Diagram</div>
-              <h4 className="text-sm font-bold text-white truncate font-sans">{data.displaytitle || title}</h4>
+              <h4 className="text-sm font-bold text-white truncate font-sans">{displayTitle}</h4>
             </div>
             
             <div className="flex gap-2">
