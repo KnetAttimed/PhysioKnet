@@ -1,7 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
 export const MODELS = {
   FLASH: "gemini-3-flash-preview",
   PRO: "gemini-3.1-pro-preview",
@@ -81,14 +77,26 @@ Use rich formatting and clear sections.`;
 Return as a structured sheet.`;
   }
 
-  const response = await ai.models.generateContent({
-    model: MODELS.FLASH,
-    contents: prompt,
-    config: {
-      systemInstruction,
-      responseMimeType: mode === "quiz" ? "application/json" : "text/plain",
+  const response = await fetch("/api/gemini", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
+    body: JSON.stringify({
+      model: MODELS.FLASH,
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        responseMimeType: mode === "quiz" ? "application/json" : "text/plain",
+      },
+      systemInstruction: { parts: [{ text: systemInstruction }] },
+    }),
   });
 
-  return response.text;
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Failed to generate content");
+  }
+
+  const data = await response.json();
+  return data.text;
 }
