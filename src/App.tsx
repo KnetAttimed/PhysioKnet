@@ -301,7 +301,7 @@ function HomeView({ onSelectSection }: { onSelectSection: (s: Section) => void }
           <span className="font-sans text-[10px] tracking-[0.3em] text-gemini-cyan uppercase font-bold">Knet Attimed</span>
         </div>
         <h1 className="text-4xl md:text-8xl font-extrabold text-gradient mb-4 tracking-tight font-sans">
-          PhysioKnet 🧠✨
+          KnetPhysio 🧠✨
         </h1>
         <p className="text-base md:text-xl text-gray-400 max-w-2xl font-light leading-relaxed font-sans">
           The ultimate Physiology Mastery Engine. Powered by mechanistic AI for elite students. 🚀

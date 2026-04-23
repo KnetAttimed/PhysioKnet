@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Maximize2, ExternalLink, Globe, Loader2 } from 'lucide-react';
+import { Maximize2, ExternalLink, Globe, Loader2, Search, Info } from 'lucide-react';
 
 interface WikiSummary {
   thumbnail?: {
@@ -52,6 +52,12 @@ export function DynamicWikiImage({ title, onExpand }: DynamicWikiImageProps) {
     }
   }, [title]);
 
+  const cleanTitle = title.replace(/_/g, ' ');
+
+  const getExternalSearchUrl = (query: string) => {
+    return `https://www.google.com/search?q=${encodeURIComponent(query + " medical physiology diagram radiopaedia statpearls teachmeanatomy")}&tbm=isch`;
+  };
+
   if (loading) {
     return (
       <div className="w-full aspect-video bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center animate-pulse my-6">
@@ -67,7 +73,6 @@ export function DynamicWikiImage({ title, onExpand }: DynamicWikiImageProps) {
     return html.replace(/<[^>]*>?/gm, '');
   };
 
-  const cleanTitle = title.replace(/_/g, ' ');
   const displayTitle = data?.displaytitle ? stripHtml(data.displaytitle) : cleanTitle;
 
   if (error || (!data?.thumbnail && !data?.originalimage)) {
@@ -75,34 +80,36 @@ export function DynamicWikiImage({ title, onExpand }: DynamicWikiImageProps) {
     
     return (
       <div className="group/wiki my-6 relative max-w-2xl mx-auto">
-        <div className="glass-card rounded-2xl overflow-hidden border border-white/5 hover:border-gemini-blue/30 transition-all shadow-xl">
-          <div className="relative bg-black/40 min-h-[150px] flex items-center justify-center">
+        <div className="glass-card rounded-2xl overflow-hidden border border-white/5 hover:border-amber-500/50 transition-all shadow-xl">
+          <div className="relative bg-white min-h-[150px] flex items-center justify-center p-4">
             <img 
               src={fallbackUrl} 
               alt={cleanTitle}
-              className="w-full h-auto max-h-[500px] object-contain group-hover/wiki:scale-[1.02] transition-transform duration-700 opacity-80"
+              className="w-full h-auto max-h-[500px] object-contain group-hover/wiki:scale-[1.02] transition-transform duration-700 opacity-90"
               referrerPolicy="no-referrer"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-            <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
               <div className="flex-1 mr-4">
                 <div className="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-1 italic">Neural Fallback Diagram</div>
                 <h4 className="text-sm font-bold text-white truncate font-sans">{cleanTitle}</h4>
               </div>
               <div className="flex gap-2">
-                <button 
-                  onClick={() => onExpand?.(fallbackUrl)}
-                  className="p-2 bg-white/10 backdrop-blur-md rounded-xl text-white hover:bg-white/20 transition-colors border border-white/10"
+                <a 
+                  href={getExternalSearchUrl(cleanTitle)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-2 bg-amber-500/20 backdrop-blur-md rounded-xl text-amber-200 hover:bg-amber-500/40 transition-colors border border-amber-500/30 flex items-center gap-2"
                 >
-                  <Maximize2 className="w-4 h-4" />
-                </button>
+                  <Search className="w-4 h-4" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">Find Direct Source</span>
+                </a>
               </div>
             </div>
           </div>
         </div>
         <div className="mt-3 px-6 py-2 border-l-2 border-amber-500/30 italic">
-          <p className="text-[11px] text-gray-500 font-sans leading-relaxed line-clamp-2">
-            Wikipedia entry not found for "{cleanTitle}". Displaying conceptual fallback from Neural Index.
+          <p className="text-[11px] text-gray-500 font-sans leading-relaxed">
+            Wikipedia entry not found. <a href={getExternalSearchUrl(cleanTitle)} target="_blank" rel="noreferrer" className="text-amber-400 hover:underline">Click here to search premium medical diagrams for "{cleanTitle}" on the web.</a>
           </p>
         </div>
       </div>
@@ -115,7 +122,7 @@ export function DynamicWikiImage({ title, onExpand }: DynamicWikiImageProps) {
   return (
     <div className="group/wiki my-6 relative max-w-2xl mx-auto">
       <div className="glass-card rounded-2xl overflow-hidden border border-white/5 hover:border-gemini-blue/30 transition-all shadow-xl">
-        <div className="relative bg-black/40 min-h-[150px] flex items-center justify-center">
+        <div className="relative bg-white min-h-[150px] flex items-center justify-center p-4">
           <img 
             src={imageUrl} 
             alt={cleanTitle}
@@ -132,6 +139,15 @@ export function DynamicWikiImage({ title, onExpand }: DynamicWikiImageProps) {
             </div>
             
             <div className="flex gap-2">
+              <a 
+                href={getExternalSearchUrl(cleanTitle)}
+                target="_blank"
+                rel="noreferrer"
+                className="p-2 bg-white/10 backdrop-blur-md rounded-xl text-white hover:bg-white/20 transition-colors border border-white/10"
+                title="Search more diagrams"
+              >
+                <Search className="w-4 h-4" />
+              </a>
               {onExpand && (
                 <button 
                   onClick={() => onExpand(imageUrl)}
@@ -157,8 +173,13 @@ export function DynamicWikiImage({ title, onExpand }: DynamicWikiImageProps) {
       
       {data.extract && (
         <div className="mt-3 px-6 py-2 border-l-2 border-gemini-blue/30 italic">
-          <p className="text-[11px] text-gray-500 font-sans leading-relaxed line-clamp-2">
+          <p className="text-[11px] text-gray-400 font-sans leading-relaxed">
             {data.extract}
+            <span className="ml-2">
+              <a href={getExternalSearchUrl(cleanTitle)} target="_blank" rel="noreferrer" className="text-gemini-cyan hover:underline inline-flex items-center gap-1">
+                <Search className="w-3 h-3" /> Search alternative diagrams
+              </a>
+            </span>
           </p>
         </div>
       )}

@@ -15,66 +15,50 @@ export async function generateStudyContent(
   chapterContent: { title: string; num: number },
   topic: string
 ) {
-  const systemInstruction = `You are a world-class medical physiology professor (Boron & Boulpaep and Guyton & Hall level). 
-Your goal is to write "Elite Deep Dive" Study Sheets for high-achieving medical students and researchers.
+  const systemInstruction = `You are the "Master Physiology Architect" for KnetPhysio. Your mission is to train the top 0.1% medical candidates using maximum intellectual density.
 
-Target Audience Level:
-- Post-graduate / Medical Student (Pre-clinical & Clinical).
-- Assume the user ALREADY has a basic foundation in biology.
-- DO NOT explain basic concepts like "What is a cell?" or "What is an organ?".
-- Start immediately with advanced mechanistic details.
+Core Directives:
+1. **Zero Fluff**: Skip all greetings, transitions, and concluding summaries. Every word must serve a mechanistic purpose.
+2. **Dense Hierarchy**: Use strict markdown nesting (## -> ### -> ####).
+3. **Intellectual Brutality**: Use advanced language. Replace basic words with medical precision (e.g., use 'sequester' instead of 'keep', 'potentiate' instead of 'increase').
+4. **Physio-Chemical Integration**: You MUST integrate Molecular Biology, Biophysics, and Clinical Medicine into a unified thread.
 
-Language Requirements:
-- Respond in Thai (ภาษาไทย).
-- Keep ALL medical, anatomical, and pathobiological technical terms in English (คำทับศัพท์เชิงการแพทย์) for precision.
-- Use LaTeX notation for ALL chemical symbols, ions, and mathematical expressions (e.g., $Ca^{2+}$, $\beta_2$-receptor, $V_m$).
-- Use Emojis (🧠🩺🔬🧬) sparingly to emphasize high-yield points.
+Language & Formatting:
+- Respond in Thai (ภาษาไทย) for flow, but ALL Technical/Medical terms MUST remain in English.
+- LaTeX for EVERYTHING quantitative ($pCO_2$, $Na^+/K^+$-ATPase, $\Delta G$).
+- Emojis: Only ⚡ (High-Yield), 🧬 (Molecular), 🏥 (Clinical). Max 1 per section.
 
-Content Depth Requirements:
-- Focus on quantitative aspects, molecular kinetics, and protein-level interactions.
-- Explain the "WHY" and "HOW" behind every physiological shift.
-- Integrate thermodynamics, physics (hemodynamics/fluid mechanics), and advanced biochemistry where relevant.
-
-Output Style:
-- NO conversational filler.
-- Start with a ## Header of the topic.
-- Use ### Subheaders for specific mechanisms.
-- ALWAYS use Markdown tables (|) for comparing pathological vs physiological states.
-- **Dynamic Image Injection**: YOU MUST insert diagrams using this EXACT syntax: [IMAGE: Wikipedia_Article_Title].
-  - Example: [IMAGE: Heart], [IMAGE: Wiggers_diagram], [IMAGE: Action_potential].
-  - Insert 2-3 of these per study sheet.
-  - DO NOT use standard markdown image syntax ![]().
-- **Safety**: Ensure Markdown syntax is correct.
+Content Architecture:
+- **Molecular Trigger**: Start with the protein/ion-level event.
+- **Feedback Loop breakage**: Explain how homeostasis fails in pathology.
+- **Quantitative Table**: Must include a "Discriminator" column (The key value that confirms a diagnosis/state).
+- **Image Injection**: 2-3 specific Wikipedia tags. 
+  - RULE: You MUST vary your diagrams. DO NOT repeat the same diagram across different sections.
+  - RULE: Be highly specific. Instead of generic terms like [IMAGE: Heart], use specific structures relevant to the text, e.g., [IMAGE: Cardiac_action_potential], [IMAGE: Nephron], [IMAGE: Neuromuscular_junction], [IMAGE: Basal_ganglia].
+  - RULE: Only insert a diagram if it directly enhances the current paragraph's mechanism.
 
 Chapter: ${chapterContent.num} - ${chapterContent.title}
 Topic: ${topic}`;
 
   let prompt = "";
   if (mode === "quiz") {
-    prompt = `Generate ONE extremely challenging multiple-choice question on "${topic}". 
-The question must test mechanistic understanding.
-Provide 4 options (A-D), the correct answer letter, and a 5-sentence deep explanation (in Thai/Eng terminology).
-Return as JSON:
-{
-  "question": "string",
-  "options": [{ "letter": "A", "text": "string" }, ...],
-  "answer": "A",
-  "explanation": "string"
-}`;
+    prompt = `GENERATE: 1 High-Discrimination Multiple Choice Question on "${topic}". 
+- Difficulty: USMLE Step 1 / Board Level.
+- Layout: Question -> 4 Options -> Correct Answer -> Rationale.
+- Rationale MUST include: 1. Correct Mechanism, 2. Why distractors are WRONG (Distractor Analysis).
+- Response Format: JSON strictly.`;
   } else if (mode === "explain") {
-    prompt = `Write a comprehensive, professional "Physiology Study Sheet" for "${topic}". 
-Focus on:
-1. Molecular/Cellular Mechanism 🧬
-2. Physiological Function ⚙️
-3. Comparative data in a TABLE 📊
-4. Clinical Correlation (Pathophysiology) 🏥
-Use rich formatting and clear sections.`;
+    prompt = `CONSTRUCT: "Elite Mastery Sheet" for "${topic}".
+- Section 1: Molecular Architecture (Ion kinetics/receptors).
+- Section 2: Physiological Feedback Integration.
+- Section 3: Comparative Table (Physiology vs. Specific Pathology).
+- Section 4: Clinical Discriminants (Why it matters for an Elite Doctor).
+- Style: Dense, Tabular, Precise.`;
   } else {
-    prompt = `Create a complex clinical case study involving "${topic}". 
-1. Case Presentation 🤒
-2. Pathophysiological Mechanism 🧩
-3. Integrated questions to probe mechanistic reasoning.
-Return as a structured sheet.`;
+    prompt = `DECONSTRUCT: Clinical Case Study for "${topic}".
+- Presentation: Complex multisystem case.
+- Pathogenesis: The "Hidden" physiological breakage.
+- Mastery Questions: 3 high-level questions on 'How would the $V_m$ change if...' or 'Effect of blocker X...'.`;
   }
 
   const response = await fetch("/api/gemini", {
