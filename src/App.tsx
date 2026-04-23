@@ -37,7 +37,7 @@ function NeuralContent({ content, onImageExpand }: { content: string, onImageExp
   const parts = content.split(/(\[IMAGE:\s*[^\]]+\])/g);
   
   return (
-    <>
+    <div className="study-sheet">
       {parts.map((part, index) => {
         const match = part.match(/\[IMAGE:\s*([^\]]+)\]/);
         if (match) {
@@ -49,36 +49,12 @@ function NeuralContent({ content, onImageExpand }: { content: string, onImageExp
             key={index}
             remarkPlugins={[remarkMath, remarkGfm]} 
             rehypePlugins={[rehypeKatex, rehypeRaw]}
-            components={{
-              p: ({ node, children, ...props }) => <p className="mb-4 md:mb-6 last:mb-0" {...props}>{children}</p>,
-              h1: ({ children }) => <h1 className="text-xl md:text-3xl font-bold mt-8 md:mt-12 mb-4 md:mb-6 text-white border-b border-white/10 pb-2 md:pb-4 font-sans">{children}</h1>,
-              h2: ({ children }) => <h2 className="text-lg md:text-2xl font-bold mt-6 md:mt-10 mb-3 md:mb-5 text-gemini-cyan font-sans">{children}</h2>,
-              h3: ({ children }) => <h3 className="text-base md:text-xl font-bold mt-4 md:mt-8 mb-2 md:mb-4 text-white/90 font-sans">{children}</h3>,
-              table: ({ children }) => (
-                <div className="my-4 md:my-8 overflow-hidden rounded-xl md:rounded-2xl border border-white/10 bg-white/5 font-sans">
-                  <table className="w-full border-collapse">{children}</table>
-                </div>
-              ),
-              th: ({ children }) => <th className="bg-white/10 p-2 md:p-4 text-left text-[10px] md:text-xs font-bold uppercase tracking-widest text-gemini-blue border-b border-white/10">{children}</th>,
-              td: ({ children }) => <td className="p-2 md:p-4 text-xs md:text-sm text-gray-300 border-b border-white/5">{children}</td>,
-              ul: ({ children }) => <ul className="list-disc list-inside space-y-1 md:space-y-2 my-4 md:my-6 ml-2 md:ml-4 text-gray-300">{children}</ul>,
-              ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 md:space-y-2 my-4 md:my-6 ml-2 md:ml-4 text-gray-300">{children}</ol>,
-              li: ({ children }) => <li className="text-gray-300 marker:text-gemini-blue">{children}</li>,
-              code: ({ className, children, ...props }) => {
-                const match = /language-(\w+)/.exec(className || "");
-                return (
-                  <code className={`${className} bg-white/10 px-2 py-0.5 rounded text-sm font-mono text-gemini-cyan`} {...props}>
-                    {children}
-                  </code>
-                );
-              }
-            }}
           >
             {part}
           </ReactMarkdown>
         );
       })}
-    </>
+    </div>
   );
 }
 
@@ -139,8 +115,9 @@ export default function App() {
         setMessages([{ role: "assistant", content: response || "Analysis complete." }]);
       }
       setStats(s => ({ ...s, questions: s.questions + 1 }));
-    } catch (e) {
-      setMessages([{ role: "assistant", content: "Error processing request. Please try again." }]);
+    } catch (e: any) {
+      const errorMsg = e.message?.includes("Neural Overload") ? e.message : "Neural link failure. Please try again later.";
+      setMessages([{ role: "assistant", content: errorMsg }]);
     } finally {
       setLoading(false);
     }
@@ -157,8 +134,9 @@ export default function App() {
     try {
       const response = await generateStudyContent("explain", selectedChapter, `Follow-up query for ${selectedTopic}: ${userMsg}`);
       setMessages(prev => [...prev, { role: "assistant", content: response || "Synthesizing response..." }]);
-    } catch (e) {
-      setMessages(prev => [...prev, { role: "assistant", content: "Neural sync timeout. Please try again." }]);
+    } catch (e: any) {
+      const errorMsg = e.message?.includes("Neural Overload") ? e.message : "Neural sync timeout. Please try again.";
+      setMessages(prev => [...prev, { role: "assistant", content: errorMsg }]);
     } finally {
       setLoading(false);
     }
@@ -176,8 +154,9 @@ export default function App() {
         setMessages(prev => [...prev, { role: "assistant", content: response || "Further deep dive generated." }]);
       }
       setStats(s => ({ ...s, questions: s.questions + 1 }));
-    } catch (e) {
-      setMessages(prev => [...prev, { role: "assistant", content: "Could not load next module." }]);
+    } catch (e: any) {
+      const errorMsg = e.message?.includes("Neural Overload") ? e.message : "Could not load next module.";
+      setMessages(prev => [...prev, { role: "assistant", content: errorMsg }]);
     } finally {
       setLoading(false);
     }

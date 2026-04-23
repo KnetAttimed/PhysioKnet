@@ -67,34 +67,51 @@
     @apply space-y-6 text-gray-200 overflow-visible;
   }
   .study-sheet h1, .study-sheet h2 {
-    @apply text-gemini-cyan font-bold border-b border-white/10 pb-2 mt-8 mb-4 flex items-center gap-2;
+    @apply text-gemini-cyan font-extrabold border-none pb-0 mt-10 mb-6 flex items-center gap-2 text-2xl md:text-3xl tracking-tight;
   }
   .study-sheet h3 {
-    @apply text-gemini-blue font-semibold mt-6 mb-2;
+    @apply text-gemini-cyan font-bold mt-8 mb-4 text-xl md:text-2xl;
   }
   .study-sheet p {
-    @apply leading-relaxed mb-4;
+    @apply leading-relaxed mb-6 text-gray-300;
   }
-  .study-sheet table {
-    @apply w-full border-collapse my-6 bg-white/5 rounded-xl overflow-hidden block md:table overflow-x-auto;
+  .study-sheet strong {
+    @apply text-white font-bold;
   }
-  .study-sheet th {
-    @apply bg-white/10 text-gemini-cyan p-4 text-left font-bold border-b border-white/10;
-  }
-  .study-sheet td {
-    @apply p-4 border-b border-white/5;
+  .study-sheet em {
+    @apply text-gemini-cyan italic not-italic font-medium;
   }
   .study-sheet ul, .study-sheet ol {
-    @apply ml-6 space-y-2 my-4;
+    @apply ml-4 space-y-4 my-6;
   }
   .study-sheet li {
-    @apply list-disc;
+    @apply list-none relative pl-6 text-gray-300;
+  }
+  .study-sheet li::before {
+    content: "•";
+    @apply absolute left-0 text-gemini-blue font-bold;
   }
   .study-sheet blockquote {
     @apply border-l-4 border-gemini-purple bg-gemini-purple/10 p-4 rounded-r-xl italic my-6;
   }
   .study-sheet code {
     @apply bg-white/10 px-1.5 py-0.5 rounded font-mono text-sm text-gemini-cyan;
+  }
+  /* Enhanced Medical Tables */
+  .study-sheet table {
+    @apply w-full border-collapse my-8 bg-white/5 rounded-2xl overflow-hidden border border-white/10 shadow-2xl block md:table overflow-x-auto;
+  }
+  .study-sheet th {
+    @apply bg-gemini-blue/20 text-gemini-cyan p-4 text-left font-bold border-b border-white/10 text-[10px] md:text-xs uppercase tracking-widest;
+  }
+  .study-sheet td {
+    @apply p-4 border-b border-white/5 text-xs md:text-sm leading-relaxed text-gray-300;
+  }
+  .study-sheet tr:last-child td {
+    @apply border-b-0;
+  }
+  .study-sheet tr:hover td {
+    @apply bg-white/5 transition-colors;
   }
   .study-sheet img {
     @apply rounded-2xl border border-white/10 my-4 w-full max-h-[400px] object-contain bg-black/40 shadow-xl transition-transform hover:scale-[1.02] cursor-zoom-in min-h-[100px];

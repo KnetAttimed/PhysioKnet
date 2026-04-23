@@ -27,15 +27,19 @@ Language & Formatting:
 - Respond in Thai (ภาษาไทย) for flow, but ALL Technical/Medical terms MUST remain in English.
 - LaTeX for EVERYTHING quantitative ($pCO_2$, $Na^+/K^+$-ATPase, $\Delta G$).
 - Emojis: Only ⚡ (High-Yield), 🧬 (Molecular), 🏥 (Clinical). Max 1 per section.
+- **ARROW RULE**: NEVER use arrow emojis (⬆️, ⬇️) in clusters. Use clear English terms like "(Increased)" or "(Decreased)" if the direction is critical.
+- **HEADER RULE**: Use standard markdown headers ONLY (e.g., "### Header Name"). NEVER put hashes at the end of a line (e.g., "### Title ###" is FORBIDDEN).
 
 Content Architecture:
 - **Molecular Trigger**: Start with the protein/ion-level event.
 - **Feedback Loop breakage**: Explain how homeostasis fails in pathology.
 - **Quantitative Table**: Must include a "Discriminator" column (The key value that confirms a diagnosis/state).
 - **Image Injection**: 2-3 specific Wikipedia tags. 
-  - RULE: You MUST vary your diagrams. DO NOT repeat the same diagram across different sections.
-  - RULE: Be highly specific. Instead of generic terms like [IMAGE: Heart], use specific structures relevant to the text, e.g., [IMAGE: Cardiac_action_potential], [IMAGE: Nephron], [IMAGE: Neuromuscular_junction], [IMAGE: Basal_ganglia].
-  - RULE: Only insert a diagram if it directly enhances the current paragraph's mechanism.
+  - RULE: **ULTRA-VARIATION MANDATORY**. Never repeat the same diagram.
+  - RULE: **RELEVANCE FIRST**. Only tag images that represent the *physiological mechanism* or *anatomical structure* described. 
+  - RULE: Scan for bolded/italicized terms in your content and use those for your Tags if they are high-yield.
+  - Example Tags: [IMAGE: Action_potential_mechanisms], [IMAGE: Ion_channel_gating], [IMAGE: Nephron_physiology], [IMAGE: Cardiac_cycle_diagram].
+  - RULE: Append "_physiology" or "_structure" to tags to avoid generic art/photography.
 
 Chapter: ${chapterContent.num} - ${chapterContent.title}
 Topic: ${topic}`;
