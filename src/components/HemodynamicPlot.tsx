@@ -1,148 +1,230 @@
 import React, { useState, useMemo } from 'react';
-import { ResponsiveContainer, ScatterChart, Scatter, XAxis, YAxis, ZAxis, Tooltip, Cell, Curve } from 'recharts';
-import { Activity, Zap, Info, ChevronRight, Sliders } from 'lucide-react';
+import { ResponsiveContainer, ScatterChart, Scatter, XAxis, YAxis, Tooltip, ReferenceLine, Label } from 'recharts';
+import { Activity, Zap, Sliders, Info, ArrowUpRight } from 'lucide-react';
 
+/**
+ * ELITE PHYSIOLOGY VISUALIZER: Pressure-Volume Loop
+ * Models: ESPVR (Linear), EDPVR (Exponential), Arterial Elastance (Ea)
+ */
 export function HemodynamicPlot() {
-  const [preload, setPreload] = useState(120); // EDV
-  const [contractility, setContractility] = useState(1); // ESPVR Slope
-  const [afterload, setAfterload] = useState(80); // MAP or Arterial Elastance proxy
+  // Inputs
+  const [ved, setVed] = useState(140);        // End Diastolic Volume (Preload Proxy)
+  const [ees, setEes] = useState(2.0);        // ESPVR Slope (Contractility)
+  const [ea, setEa] = useState(1.5);          // Arterial Elastance (Afterload)
 
-  const loopData = useMemo(() => {
-    // Basic PV Loop Simulation
-    // 1. Filling (EDV)
-    // 2. Isovolumetric Contraction
-    // 3. Ejection
-    // 4. Isovolumetric Relaxation
+  const physics = useMemo(() => {
+    // End-Systolic PV Relationship: P = Ees * (V - V0)
+    const v0 = 10;
     
-    const esv = Math.max(40, preload - (60 * contractility * (120 / afterload)));
-    const activePressure = afterload + 20;
+    // Intersection of ESPVR and Arterial Elastance (Ea = Pes / SV)
+    // SV = Ved - Ves
+    // Pes = Ea * (Ved - Ves)
+    // Pes = Ees * (Ves - v0)
+    // Ea * (Ved - Ves) = Ees * (Ves - v0)
+    // Ea*Ved - Ea*Ves = Ees*Ves - Ees*v0
+    // Ves * (Ees + Ea) = Ea*Ved + Ees*v0
+    const ves = (ea * ved + ees * v0) / (ees + ea);
+    const pes = ees * (ves - v0);
+    const sv = ved - ves;
+    const ef = (sv / ved) * 100;
+    const sw = sv * pes; // Stroke Work Proxy (Area)
+    const co = sv * 70 / 1000; // CO at 70 bpm
 
-    return [
-      { v: 50, p: 5, stage: 'Filling' },         // End Diastolic Point (Start)
-      { v: preload, p: 10, stage: 'EDV' },       // End Diastolic Volume
-      { v: preload, p: afterload, stage: 'IC' }, // Isovolumetric Contraction
-      { v: (preload + esv) / 2, p: activePressure, stage: 'Ejection' },
-      { v: esv, p: afterload, stage: 'ESV' },    // End Systolic Volume
-      { v: esv, p: 5, stage: 'IR' },             // Isovolumetric Relaxation
-      { v: 50, p: 5, stage: 'Filling' },         // Back to start
+    // Curves Generation
+    const espvrPoints = [
+      { v: v0, p: 0 },
+      { v: 200, p: ees * (200 - v0) }
     ];
-  }, [preload, contractility, afterload]);
 
-  const sv = preload - loopData[4].v;
-  const ef = (sv / preload) * 100;
+    const edpvrPoints = Array.from({ length: 41 }, (_, i) => {
+      const v = i * 5;
+      // Exponential EDPVR: P = 0.5 * (exp(0.02 * V) - 1)
+      const p = 1.2 * (Math.exp(0.018 * v) - 1);
+      return { v, p };
+    });
+
+    const ped = 1.2 * (Math.exp(0.018 * ved) - 1);
+
+    // Loop Construction
+    const loopPoints = [
+      { v: ved, p: ped, stage: 'ED' },               // 1. End Diastole
+      { v: ved, p: pes * 0.8, stage: 'IC' },         // 2. Isovolumetric Contraction (Linear approx)
+      { v: ved, p: pes, stage: 'Opening' },          // 3. Aortic Valve Opens
+      { v: (ved + ves) / 2, p: pes * 1.05, stage: 'Ejection' }, // 4. Peak Systole
+      { v: ves, p: pes, stage: 'ES' },               // 5. End Systole
+      { v: ves, p: ped + 5, stage: 'IR' },           // 6. Isovolumetric Relaxation
+      { v: ves, p: ped, stage: 'Opening' }           // 7. Mitral Valve Opens
+    ];
+
+    // Close the loop with filling (EDPVR subset)
+    const fillingPoints = edpvrPoints.filter(pt => pt.v >= ves && pt.v <= ved);
+    const fullLoop = [...loopPoints, ...fillingPoints];
+
+    return { ves, pes, ped, sv, ef, sw, co, espvrPoints, edpvrPoints, fullLoop, eaLine: [{v: ved, p:0}, {v: ves, p: pes}] };
+  }, [ved, ees, ea]);
 
   return (
-    <div className="glass-card rounded-3xl p-6 md:p-8 my-8 border border-white/10 relative overflow-hidden group">
-      <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-        <Activity className="w-48 h-48 text-gemini-cyan" />
-      </div>
-
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 relative z-10">
-        <div>
-          <div className="flex items-center gap-2 text-gemini-cyan font-bold uppercase tracking-widest text-[10px] mb-1">
-            <Zap className="w-3 h-3" /> Neural Simulation Node
+    <div className="glass-card rounded-[2rem] p-6 md:p-10 my-10 border border-white/10 relative overflow-hidden shadow-2xl">
+      {/* Decorative Aura */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gemini-blue via-gemini-cyan to-gemini-purple" />
+      
+      <header className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 mb-10">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-gemini-cyan font-bold uppercase tracking-[0.2em] text-[10px]">
+            <Activity className="w-4 h-4" /> Advanced Hemodynamic Lab
           </div>
-          <h3 className="text-2xl font-bold text-white font-sans">Dynamic Pressure-Volume Loop</h3>
+          <h3 className="text-3xl font-extrabold text-white font-sans tracking-tight">Left Ventricular PV Dynamics</h3>
         </div>
-        <div className="flex gap-4">
-           <div className="text-center bg-white/5 border border-white/5 px-4 py-2 rounded-2xl">
-              <div className="text-[10px] text-gray-500 uppercase font-bold">Stroke Volume</div>
-              <div className="text-xl font-bold text-gemini-blue font-mono">{sv.toFixed(0)} mL</div>
-           </div>
-           <div className="text-center bg-white/5 border border-white/5 px-4 py-2 rounded-2xl">
-              <div className="text-[10px] text-gray-500 uppercase font-bold">Ejection Fraction</div>
-              <div className="text-xl font-bold text-gemini-cyan font-mono">{ef.toFixed(1)}%</div>
-           </div>
+
+        <div className="flex flex-wrap gap-3">
+          <MetricCard label="Stroke Volume" value={`${physics.sv.toFixed(0)}`} unit="mL" color="text-gemini-blue" />
+          <MetricCard label="Ejection Fraction" value={`${physics.ef.toFixed(1)}`} unit="%" color="text-gemini-cyan" />
+          <MetricCard label="Cardiac Output" value={`${physics.co.toFixed(1)}`} unit="L/min" color="text-gemini-purple" />
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
-        <div className="lg:col-span-2 h-[350px] bg-black/40 rounded-2xl p-4 border border-white/5 relative">
-          <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="lg:col-span-8 bg-black/60 rounded-3xl p-6 border border-white/5 relative shadow-inner group">
+          <ResponsiveContainer width="100%" height={400}>
+            <ScatterChart margin={{ top: 20, right: 30, bottom: 20, left: 10 }}>
               <XAxis 
-                type="number" 
-                dataKey="v" 
-                name="Volume" 
-                unit="mL" 
-                domain={[0, 200]} 
-                stroke="#444" 
-                tick={{fontSize: 10}}
-                label={{ value: 'Left Ventricular Volume (mL)', position: 'bottom', fill: '#666', fontSize: 10 }}
+                type="number" dataKey="v" name="Volume" unit="mL" domain={[0, 200]} stroke="#333" 
+                tick={{fontSize: 11, fill: '#666'}} axisLine={false} tickLine={false}
               />
               <YAxis 
-                type="number" 
-                dataKey="p" 
-                name="Pressure" 
-                unit="mmHg" 
-                domain={[0, 160]} 
-                stroke="#444" 
-                tick={{fontSize: 10}}
-                label={{ value: 'Pressure (mmHg)', angle: -90, position: 'left', fill: '#666', fontSize: 10 }}
+                type="number" dataKey="p" name="Pressure" unit="mmHg" domain={[0, 180]} stroke="#333" 
+                tick={{fontSize: 11, fill: '#666'}} axisLine={false} tickLine={false}
               />
-              <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '8px', fontSize: '12px' }} />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '12px', color: '#fff' }}
+                itemStyle={{ color: '#00f5ff' }}
+               />
+              
+              {/* Static Reference Curves */}
+              <Scatter name="ESPVR" data={physics.espvrPoints} line={{ stroke: '#ffffff22', strokeDasharray: '5 5' }} shape={() => null} />
+              <Scatter name="EDPVR" data={physics.edpvrPoints} line={{ stroke: '#ffffff22', strokeDasharray: '5 5' }} shape={() => null} />
+              
+              {/* Arterial Elastance Line (Ea) */}
+              <Scatter name="Ea" data={physics.eaLine} line={{ stroke: '#8a2be244', strokeWidth: 1 }} shape={() => null} />
+
+              {/* Main PV Loop */}
               <Scatter 
                 name="PV Loop" 
-                data={loopData} 
+                data={physics.fullLoop} 
                 fill="#1e90ff" 
-                line={{ stroke: '#1e90ff', strokeWidth: 3 }}
+                line={{ stroke: 'url(#loopGradient)', strokeWidth: 4, strokeLinejoin: 'round' }}
                 lineType="joint"
+                shape={(props: any) => {
+                  const { cx, cy, payload } = props;
+                  if (payload.stage === 'ED' || payload.stage === 'ES') {
+                    return <circle cx={cx} cy={cy} r={4} fill="#00f5ff" />;
+                  }
+                  return null;
+                }}
               />
+
+              <defs>
+                <linearGradient id="loopGradient" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#1e90ff" />
+                  <stop offset="100%" stopColor="#00f5ff" />
+                </linearGradient>
+              </defs>
+
+              {/* Labels */}
+              <ReferenceLine x={physics.ves} stroke="#ffffff11" />
+              <ReferenceLine x={physics.ved} stroke="#ffffff11" />
             </ScatterChart>
           </ResponsiveContainer>
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur px-3 py-1 rounded-full border border-white/10 text-[9px] text-gray-400 uppercase tracking-widest pointer-events-none">
-            Ventricular Dynamics Visualizer
+
+          <div className="mt-4 flex justify-between px-4 text-[10px] text-gray-500 font-mono tracking-widest uppercase">
+            <span>Volume (mL)</span>
+            <span className="text-gemini-cyan">ESPVR (Inotropy)</span>
+            <span>Pressure (mmHg)</span>
+          </div>
+
+          <div className="absolute bottom-10 left-10 p-4 rounded-xl bg-black/40 backdrop-blur border border-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+             <div className="text-[10px] text-gray-600 font-bold mb-1">LOOP ANALYSIS</div>
+             <div className="text-xs text-gray-400">Total Stroke Work: <span className="text-white">High</span></div>
+             <div className="text-xs text-gray-400">Compliance: <span className="text-white">Normal</span></div>
           </div>
         </div>
 
-        <div className="space-y-8 p-4 bg-white/5 rounded-2xl border border-white/5">
-           <div className="flex items-center gap-2 text-white font-bold text-sm mb-4">
-              <Sliders className="w-4 h-4 text-gemini-blue" /> Hemodynamic Inputs
-           </div>
-           
-           <div className="space-y-2">
-             <div className="flex justify-between text-xs text-gray-400">
-               <span>Preload (EDV)</span>
-               <span className="text-gemini-blue">{preload} mL</span>
-             </div>
-             <input 
-               type="range" min="80" max="180" step="5" 
-               value={preload} onChange={(e) => setPreload(Number(e.target.value))}
-               className="w-full accent-gemini-blue bg-white/10 h-1.5 rounded-lg appearance-none cursor-pointer"
-             />
-           </div>
+        <div className="lg:col-span-4 space-y-8">
+           <div className="glass-card p-6 rounded-2xl border border-white/5 space-y-8">
+              <h4 className="flex items-center gap-2 text-white font-bold text-sm">
+                <Sliders className="w-4 h-4 text-gemini-blue" /> System Parameters
+              </h4>
 
-           <div className="space-y-2">
-             <div className="flex justify-between text-xs text-gray-400">
-               <span>Contractility (Inotropy)</span>
-               <span className="text-gemini-cyan">x{contractility.toFixed(1)}</span>
-             </div>
-             <input 
-               type="range" min="0.5" max="2.5" step="0.1" 
-               value={contractility} onChange={(e) => setContractility(Number(e.target.value))}
-               className="w-full accent-gemini-cyan bg-white/10 h-1.5 rounded-lg appearance-none cursor-pointer"
-             />
-           </div>
+              <ControlSlider 
+                label="Preload (Venous Return)" 
+                sub="Increases End-Diastolic Volume"
+                value={ved} 
+                min={80} max={180} step={5} 
+                onChange={setVed} 
+                color="accent-gemini-blue" 
+              />
 
-           <div className="space-y-2">
-             <div className="flex justify-between text-xs text-gray-400">
-               <span>Afterload (Mean Pressure)</span>
-               <span className="text-gemini-purple">{afterload} mmHg</span>
-             </div>
-             <input 
-               type="range" min="50" max="130" step="5" 
-               value={afterload} onChange={(e) => setAfterload(Number(e.target.value))}
-               className="w-full accent-gemini-purple bg-white/10 h-1.5 rounded-lg appearance-none cursor-pointer"
-             />
-           </div>
+              <ControlSlider 
+                label="Inotropy (Contractility)" 
+                sub="Shifts ESPVR Slope (Ees)"
+                value={ees} 
+                min={0.5} max={4.0} step={0.1} 
+                onChange={setEes} 
+                color="accent-gemini-cyan" 
+              />
 
-           <div className="pt-4 border-t border-white/5">
-              <div className="text-[10px] text-gray-500 italic leading-relaxed">
-                 *Interactive plot demonstrating Frank-Starling mechanics and ESPVR shifts.
+              <ControlSlider 
+                label="Afterload (Arterial Tone)" 
+                sub="Modifies Arterial Elastance (Ea)"
+                value={ea} 
+                min={0.5} max={3.0} step={0.1} 
+                onChange={setEa} 
+                color="accent-gemini-purple" 
+              />
+
+              <div className="pt-4 p-4 bg-white/5 rounded-xl border border-white/5">
+                <div className="flex gap-2 text-blue-400 mb-1">
+                  <Info className="w-3 h-3" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider">Clinical Insight</span>
+                </div>
+                <p className="text-[11px] text-gray-400 leading-relaxed italic">
+                  Higher Afterload reduces Stroke Volume and Ejection Fraction.
+                  Compare this to Heart Failure (Reduced Ees).
+                </p>
               </div>
            </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function MetricCard({ label, value, unit, color }: any) {
+  return (
+    <div className="bg-white/5 border border-white/5 px-6 py-4 rounded-3xl min-w-[140px] shadow-lg">
+      <div className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">{label}</div>
+      <div className={`text-2xl font-black font-mono ${color}`}>
+        {value}<span className="text-xs ml-1 font-normal opacity-50">{unit}</span>
+      </div>
+    </div>
+  );
+}
+
+function ControlSlider({ label, sub, value, min, max, step, onChange, color }: any) {
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-between items-end">
+        <div>
+          <div className="text-xs text-white font-bold">{label}</div>
+          <div className="text-[10px] text-gray-500">{sub}</div>
+        </div>
+        <div className="text-sm font-mono font-bold text-gemini-cyan">{value.toFixed(1)}</div>
+      </div>
+      <input 
+        type="range" min={min} max={max} step={step} 
+        value={value} onChange={(e) => onChange(Number(e.target.value))}
+        className={`w-full ${color} bg-white/10 h-1.5 rounded-lg appearance-none cursor-pointer hover:bg-white/20 transition-colors`}
+      />
     </div>
   );
 }
