@@ -34,6 +34,7 @@ Content Architecture:
 - **Molecular Trigger**: Start with the protein/ion-level event.
 - **Feedback Loop breakage**: Explain how homeostasis fails in pathology.
 - **Quantitative Table**: Must include a "Discriminator" column (The key value that confirms a diagnosis/state).
+- **Interactive Visualizer**: If the topic involves Cardiac Mechanics, Pressure-Volume Loops, or Heart Failure, you MUST inject [HEMODYNAMIC_PLOT] to allow the student to simulate the state.
 - **Image Injection**: 2-3 specific Wikipedia tags. 
   - RULE: **ULTRA-VARIATION MANDATORY**. Never repeat the same diagram.
   - RULE: **RELEVANCE FIRST**. Only tag images that represent the *physiological mechanism* or *anatomical structure* described. 

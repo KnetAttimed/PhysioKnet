@@ -25,6 +25,9 @@ import { CURRICULUM, Section, Chapter } from "./data/curriculum";
 import { generateStudyContent, QuizQuestion } from "./lib/gemini";
 import { DynamicWikiImage } from "./components/DynamicWikiImage";
 
+import { MasterySearch } from "./components/MasterySearch";
+import { HemodynamicPlot } from "./components/HemodynamicPlot";
+
 type View = "home" | "section" | "learn";
 type Mode = "quiz" | "explain" | "case";
 
@@ -34,7 +37,7 @@ export const getImageSearchUrl = (alt: string) => {
 };
 
 function NeuralContent({ content, onImageExpand }: { content: string, onImageExpand: (url: string | null) => void }) {
-  const parts = content.split(/(\[IMAGE:\s*[^\]]+\])/g);
+  const parts = content.split(/(\[IMAGE:\s*[^\]]+\]|\[HEMODYNAMIC_PLOT\])/g);
   
   return (
     <div className="study-sheet">
@@ -43,6 +46,9 @@ function NeuralContent({ content, onImageExpand }: { content: string, onImageExp
         if (match) {
           const title = match[1].trim();
           return <DynamicWikiImage key={index} title={title} onExpand={(url) => onImageExpand(url)} />;
+        }
+        if (part === "[HEMODYNAMIC_PLOT]") {
+           return <HemodynamicPlot key={index} />;
         }
         return (
           <ReactMarkdown 
@@ -92,9 +98,12 @@ export default function App() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Auto-scroll disabled by user request to prevent jumping to bottom
+    /* 
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
+    */
   }, [messages, loading]);
 
   const startLearnSession = async (chapter: Chapter, topic: string, mode: Mode) => {
@@ -168,6 +177,11 @@ export default function App() {
         {view === "home" && (
           <HomeView 
             onSelectSection={(s) => { setSelectedSection(s); setView("section"); }} 
+            onSearchSelect={(section, chapter, topic) => {
+              setSelectedSection(section);
+              setView("section");
+              setTopicModal({ chapter, topic });
+            }}
           />
         )}
         {view === "section" && selectedSection && (
@@ -264,7 +278,7 @@ export default function App() {
   );
 }
 
-function HomeView({ onSelectSection }: { onSelectSection: (s: Section) => void }) {
+function HomeView({ onSelectSection, onSearchSelect }: { onSelectSection: (s: Section) => void, onSearchSelect: (s: Section, c: Chapter, t: string) => void }) {
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }} 
@@ -282,9 +296,13 @@ function HomeView({ onSelectSection }: { onSelectSection: (s: Section) => void }
         <h1 className="text-4xl md:text-8xl font-extrabold text-gradient mb-4 tracking-tight font-sans">
           KnetPhysio 🧠✨
         </h1>
-        <p className="text-base md:text-xl text-gray-400 max-w-2xl font-light leading-relaxed font-sans">
+        <p className="text-base md:text-xl text-gray-400 max-w-2xl font-light leading-relaxed font-sans mb-12">
           The ultimate Physiology Mastery Engine. Powered by mechanistic AI for elite students. 🚀
         </p>
+
+        <MasterySearch 
+          onTopicSelect={onSearchSelect} 
+        />
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -493,7 +511,7 @@ function LearnView({
           className="flex-1 overflow-y-auto mb-4 md:mb-6 pr-2 md:pr-4 space-y-6 md:space-y-8 scroll-smooth"
         >
           {messages?.map((msg: any, i: number) => (
-            <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div key={i} className={`flex animate-in ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               {msg.quiz ? (
                 <QuizCard quiz={msg.quiz} onImageExpand={onImageExpand} />
               ) : (

@@ -19,21 +19,26 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: "API Keys are not set on the server." });
   }
 
-  // Resilient Execution Engine: Retry with Key Rotation + Model Fallback
+  // Aggressive Resilient Execution Engine: Retry with Key Rotation + Exponential Backoff
   let lastError = null;
-  const modelsToTry = [model, "gemini-3.1-pro-preview", "gemini-1.5-flash"]; // Fallback chain
-  const maxRetries = 3;
+  const modelsToTry = [model, "gemini-1.5-flash", "gemini-1.5-pro"]; // Update to stable fallback models
+  const maxRetries = 5; // Increased retries for better success rate during spikes
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
-    const currentModel = modelsToTry[attempt] || modelsToTry[0];
-    const apiKey = keys[Math.floor(Math.random() * keys.length)];
+    // Model strategy: Stay on requested model for 2 tries, then fallback
+    const currentModel = attempt < 2 ? model : (modelsToTry[attempt - 1] || modelsToTry[0]);
+    const apiKey = keys[attempt % keys.length]; // Deterministic rotation through all keys
     const genAI = new GoogleGenAI({ apiKey });
     
     try {
-      // Small delay on retries
-      if (attempt > 0) await new Promise(r => setTimeout(r, 1000 * attempt));
+      // Exponential Backoff: 1s, 2s, 4s, 8s...
+      if (attempt > 0) {
+        const backoff = Math.pow(2, attempt - 1) * 1000;
+        console.log(`Backing off for ${backoff}ms before attempt ${attempt + 1}`);
+        await new Promise(r => setTimeout(r, backoff));
+      }
       
-      console.log(`Attempt ${attempt + 1} using model: ${currentModel}`);
+      console.log(`Attempt ${attempt + 1}/${maxRetries} using model: ${currentModel}`);
       
       const result = await (genAI as any).models.generateContent({
         model: currentModel,
@@ -47,14 +52,21 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json({ text: result.text });
     } catch (error: any) {
       lastError = error;
-      console.error(`Attempt ${attempt + 1} failed:`, error.message);
+      const errorMessage = error.message || "";
+      const is503 = errorMessage.includes("503") || errorMessage.toLowerCase().includes("overloaded") || errorMessage.toLowerCase().includes("demand");
+      const is429 = errorMessage.includes("429") || errorMessage.toLowerCase().includes("rate limit");
+
+      console.error(`Attempt ${attempt + 1} failed (${is503 ? '503' : is429 ? '429' : 'Other'}):`, errorMessage);
       
-      // If it's a 503 (High demand) or 429 (Rate limit), we retry. 
-      // Otherwise, we might want to fail fast, but for robustness we'll just try next key/model.
-      const status = error.status || (error.message?.includes("503") ? 503 : 500);
-      if (status !== 503 && status !== 429 && attempt < maxRetries - 1) {
-         // Some other error, but we still have retries
-         continue;
+      // If we've exhausted retries, exit loop
+      if (attempt === maxRetries - 1) break;
+
+      // Always retry on 503/429
+      if (is503 || is429) continue;
+      
+      // For other errors, maybe check if it's worth retrying
+      if (errorMessage.includes("safety") || errorMessage.includes("blocked")) {
+        return res.status(400).json({ error: "Content flagged by safety filters.", details: errorMessage });
       }
     }
   }
