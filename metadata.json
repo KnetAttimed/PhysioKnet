@@ -1,6 +1,6 @@
 {
-  "name": "PhysioGemini",
-  "description": "An elite physiology mastery engine powered by Gemini AI, based on the Berne & Levy curriculum. Features mechanistic quizzes, clinical cases, and deep explanations with a cosmic Gemini aesthetic.",
+  "name": "PhysioKnet",
+  "description": "The ultimate Physiology Mastery Engine. Powered by mechanistic AI for elite medical students, based on the Berne & Levy curriculum and Boron & Boulpaep deep-dives.",
   "requestFramePermissions": [],
   "majorCapabilities": ["AI-powered learning", "Medical education", "Mechanism-based quizzes"]
 }

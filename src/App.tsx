@@ -50,19 +50,19 @@ function NeuralContent({ content, onImageExpand }: { content: string, onImageExp
             remarkPlugins={[remarkMath, remarkGfm]} 
             rehypePlugins={[rehypeKatex, rehypeRaw]}
             components={{
-              p: ({ node, children, ...props }) => <p className="mb-6 last:mb-0" {...props}>{children}</p>,
-              h1: ({ children }) => <h1 className="text-3xl font-bold mt-12 mb-6 text-white border-b border-white/10 pb-4 font-sans">{children}</h1>,
-              h2: ({ children }) => <h2 className="text-2xl font-bold mt-10 mb-5 text-gemini-cyan font-sans">{children}</h2>,
-              h3: ({ children }) => <h3 className="text-xl font-bold mt-8 mb-4 text-white/90 font-sans">{children}</h3>,
+              p: ({ node, children, ...props }) => <p className="mb-4 md:mb-6 last:mb-0" {...props}>{children}</p>,
+              h1: ({ children }) => <h1 className="text-xl md:text-3xl font-bold mt-8 md:mt-12 mb-4 md:mb-6 text-white border-b border-white/10 pb-2 md:pb-4 font-sans">{children}</h1>,
+              h2: ({ children }) => <h2 className="text-lg md:text-2xl font-bold mt-6 md:mt-10 mb-3 md:mb-5 text-gemini-cyan font-sans">{children}</h2>,
+              h3: ({ children }) => <h3 className="text-base md:text-xl font-bold mt-4 md:mt-8 mb-2 md:mb-4 text-white/90 font-sans">{children}</h3>,
               table: ({ children }) => (
-                <div className="my-8 overflow-hidden rounded-2xl border border-white/10 bg-white/5 font-sans">
+                <div className="my-4 md:my-8 overflow-hidden rounded-xl md:rounded-2xl border border-white/10 bg-white/5 font-sans">
                   <table className="w-full border-collapse">{children}</table>
                 </div>
               ),
-              th: ({ children }) => <th className="bg-white/10 p-4 text-left text-xs font-bold uppercase tracking-widest text-gemini-blue border-b border-white/10">{children}</th>,
-              td: ({ children }) => <td className="p-4 text-sm text-gray-300 border-b border-white/5">{children}</td>,
-              ul: ({ children }) => <ul className="list-disc list-inside space-y-2 my-6 ml-4 text-gray-300">{children}</ul>,
-              ol: ({ children }) => <ol className="list-decimal list-inside space-y-2 my-6 ml-4 text-gray-300">{children}</ol>,
+              th: ({ children }) => <th className="bg-white/10 p-2 md:p-4 text-left text-[10px] md:text-xs font-bold uppercase tracking-widest text-gemini-blue border-b border-white/10">{children}</th>,
+              td: ({ children }) => <td className="p-2 md:p-4 text-xs md:text-sm text-gray-300 border-b border-white/5">{children}</td>,
+              ul: ({ children }) => <ul className="list-disc list-inside space-y-1 md:space-y-2 my-4 md:my-6 ml-2 md:ml-4 text-gray-300">{children}</ul>,
+              ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 md:space-y-2 my-4 md:my-6 ml-2 md:ml-4 text-gray-300">{children}</ol>,
               li: ({ children }) => <li className="text-gray-300 marker:text-gemini-blue">{children}</li>,
               code: ({ className, children, ...props }) => {
                 const match = /language-(\w+)/.exec(className || "");
@@ -313,13 +313,13 @@ function HomeView({ onSelectSection }: { onSelectSection: (s: Section) => void }
           <button
             key={section.id}
             onClick={() => onSelectSection(section)}
-            className="group relative glass-card glass-card-hover p-8 rounded-3xl text-left overflow-hidden border border-white/5 hover:border-gemini-blue/30 transition-all"
+            className="group relative glass-card glass-card-hover p-6 md:p-8 rounded-2xl md:rounded-3xl text-left overflow-hidden border border-white/5 hover:border-gemini-blue/30 transition-all"
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-bl-full translate-x-8 -translate-y-8 group-hover:scale-110 transition-transform" />
-            <div className="text-4xl mb-6 group-hover:scale-110 transition-transform duration-500">{section.icon}</div>
-            <div className="font-sans text-[10px] tracking-widest text-gray-500 uppercase mb-2">Section {section.section}</div>
-            <h3 className="text-2xl font-bold mb-4 text-white group-hover:text-gemini-blue transition-colors font-sans">{section.title}</h3>
-            <div className="flex items-center justify-between text-sm text-gray-500 font-sans">
+            <div className="absolute top-0 right-0 w-24 md:w-32 h-24 md:h-32 bg-gradient-to-br from-white/10 to-transparent rounded-bl-full translate-x-8 -translate-y-8 group-hover:scale-110 transition-transform" />
+            <div className="text-3xl md:text-4xl mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-500">{section.icon}</div>
+            <div className="font-sans text-[8px] md:text-[10px] tracking-widest text-gray-500 uppercase mb-1 md:mb-2">Section {section.section}</div>
+            <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-white group-hover:text-gemini-blue transition-colors font-sans leading-tight">{section.title}</h3>
+            <div className="flex items-center justify-between text-[10px] md:text-sm text-gray-500 font-sans">
               <span>{section.chapters.length} Sub-chapters</span>
               <span className="opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 transition-transform">Explore →</span>
             </div>
@@ -577,12 +577,12 @@ function QuizCard({ quiz, onImageExpand }: { quiz: QuizQuestion, onImageExpand: 
   const [revealed, setRevealed] = useState(false);
 
   return (
-    <div className="max-w-[90%] glass-card p-8 rounded-3xl border-l-4 border-l-gemini-cyan relative overflow-hidden font-sans">
+    <div className="max-w-[95%] md:max-w-[90%] glass-card p-5 md:p-8 rounded-[1.5rem] md:rounded-3xl border-l-4 border-l-gemini-cyan relative overflow-hidden font-sans">
       <div className="absolute top-0 right-0 w-24 h-24 bg-gemini-cyan/5 blur-3xl rounded-full" />
-      <div className="font-sans text-[10px] text-gemini-cyan uppercase mb-4 tracking-widest font-bold">Mechanism Validation</div>
-      <h4 className="text-xl font-bold mb-8 text-white leading-relaxed font-sans">{quiz?.question}</h4>
+      <div className="font-sans text-[8px] md:text-[10px] text-gemini-cyan uppercase mb-2 md:mb-4 tracking-widest font-bold">Mechanism Validation</div>
+      <h4 className="text-lg md:text-xl font-bold mb-6 md:mb-8 text-white leading-relaxed font-sans">{quiz?.question}</h4>
       
-      <div className="grid gap-3 mb-8">
+      <div className="grid gap-2 md:gap-3 mb-6 md:mb-8">
         {quiz?.options?.map((opt) => {
           const isCorrect = opt.letter === quiz.answer;
           const isSelected = opt.letter === selected;
@@ -608,14 +608,14 @@ function QuizCard({ quiz, onImageExpand }: { quiz: QuizQuestion, onImageExpand: 
               key={opt.letter}
               onClick={() => !revealed && setSelected(opt.letter)}
               disabled={revealed}
-              className={`p-4 rounded-2xl border ${borderColor} ${bgColor} text-left transition-all hover:bg-white/10 flex items-start gap-4 group`}
+              className={`p-3 md:p-4 rounded-xl md:rounded-2xl border ${borderColor} ${bgColor} text-left transition-all hover:bg-white/10 flex items-start gap-3 md:gap-4 group`}
             >
-              <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${
+              <span className={`w-5 h-5 md:w-6 md:h-6 rounded-md md:rounded-lg flex items-center justify-center font-bold text-[10px] md:text-xs shrink-0 transition-colors ${
                 isSelected ? "bg-gemini-blue text-white" : "bg-white/10 text-gray-500 group-hover:text-gray-300"
               }`}>
                 {opt.letter}
               </span>
-              <div className={`transition-colors flex-1 ${isSelected ? "text-white" : "text-gray-400 group-hover:text-gray-300"}`}>
+              <div className={`transition-colors flex-1 text-xs md:text-base ${isSelected ? "text-white" : "text-gray-400 group-hover:text-gray-300"}`}>
                 <ReactMarkdown 
                   remarkPlugins={[remarkMath, remarkGfm]} 
                   rehypePlugins={[rehypeKatex, rehypeRaw]}
@@ -635,7 +635,7 @@ function QuizCard({ quiz, onImageExpand }: { quiz: QuizQuestion, onImageExpand: 
         <button 
           onClick={() => selected && setRevealed(true)}
           disabled={!selected}
-          className="w-full py-4 bg-gemini-blue hover:bg-blue-600 disabled:opacity-50 text-white font-bold rounded-2xl transition-all shadow-[0_10px_20px_rgba(30,144,255,0.2)] active:scale-[0.98]"
+          className="w-full py-3 md:py-4 bg-gemini-blue hover:bg-blue-600 disabled:opacity-50 text-white font-bold rounded-xl md:rounded-2xl transition-all shadow-[0_10px_20px_rgba(30,144,255,0.2)] active:scale-[0.98] text-sm md:text-base"
         >
           Confirm Mechanism
         </button>
@@ -643,19 +643,19 @@ function QuizCard({ quiz, onImageExpand }: { quiz: QuizQuestion, onImageExpand: 
         <motion.div 
           initial={{ opacity: 0, y: 10 }} 
           animate={{ opacity: 1, y: 0 }}
-          className="p-6 bg-white/5 rounded-2xl border border-white/10"
+          className="p-4 md:p-6 bg-white/5 rounded-xl md:rounded-2xl border border-white/10"
         >
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-2 md:mb-3">
             {selected === quiz.answer ? (
-              <span className="text-gemini-cyan font-bold text-sm tracking-widest flex items-center gap-2">
-                <div className="w-2 h-2 bg-gemini-cyan rounded-full animate-ping" />
+              <span className="text-gemini-cyan font-bold text-[10px] md:text-sm tracking-widest flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-gemini-cyan rounded-full animate-ping" />
                 NEURAL SYNC SUCCESSFUL
               </span>
             ) : (
-              <span className="text-red-400 font-bold text-sm tracking-widest">SYSTEM MISALIGNMENT</span>
+              <span className="text-red-400 font-bold text-[10px] md:text-sm tracking-widest font-sans">SYSTEM MISALIGNMENT</span>
             )}
           </div>
-          <div className="text-gray-300 text-sm leading-relaxed prose prose-invert prose-sm">
+          <div className="text-gray-300 text-xs md:text-sm leading-relaxed prose prose-invert prose-sm">
              <NeuralContent content={quiz.explanation} onImageExpand={onImageExpand} />
           </div>
         </motion.div>

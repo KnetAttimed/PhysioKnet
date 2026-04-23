@@ -16,30 +16,40 @@ async function startServer() {
 
   app.use(express.json());
 
-  // Gemini API Proxy
-  const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+  // Helper to get rotated keys
+  const getKeys = () => {
+    const rawKeys = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || "";
+    return rawKeys.split(",").map(k => k.trim()).filter(k => k.length > 0);
+  };
 
+  // Gemini API Proxy
   app.post("/api/gemini", async (req, res) => {
     try {
       const { model, contents, config, systemInstruction } = req.body;
+      const keys = getKeys();
       
-      if (!process.env.GEMINI_API_KEY) {
-        return res.status(500).json({ error: "GEMINI_API_KEY is not set on the server." });
+      if (keys.length === 0) {
+        console.error("Critical: No GEMINI_API_KEY(S) set in process.env");
+        return res.status(500).json({ error: "API Key is missing on the server." });
       }
 
-      // Using the structure that was working in src/lib/gemini.ts
+      // Rotate/Select random key
+      const apiKey = keys[Math.floor(Math.random() * keys.length)];
+      console.log(`Using key: ...${apiKey.slice(-4)} (Total keys: ${keys.length})`);
+
+      const genAI = new GoogleGenAI({ apiKey });
       const result = await (genAI as any).models.generateContent({
         model: model,
         contents: contents,
         config: {
           ...config,
-          systemInstruction: systemInstruction
-        }
+          systemInstruction: systemInstruction,
+        },
       });
 
       res.json({ text: result.text });
     } catch (error: any) {
-      console.error("Gemini API Error:", error);
+      console.error("Gemini Proxy Error:", error);
       res.status(500).json({ error: error.message || "Failed to generate content" });
     }
   });
