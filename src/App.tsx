@@ -8,6 +8,7 @@ import rehypeRaw from "rehype-raw";
 import "katex/dist/katex.min.css";
 import { 
   ChevronLeft, 
+  ChevronRight,
   Zap, 
   Brain, 
   RotateCcw,
@@ -171,6 +172,53 @@ export default function App() {
     }
   };
 
+  const handleNextTopic = () => {
+    if (!selectedSection || !selectedChapter || !selectedTopic) return;
+
+    let nextTopic = "";
+    let nextChapter = selectedChapter;
+    let nextSection = selectedSection;
+
+    const topics = selectedChapter.topics;
+    const eliteTopics = selectedChapter.eliteTopics || [];
+    
+    const topicIdx = topics.indexOf(selectedTopic);
+    const eliteIdx = eliteTopics.indexOf(selectedTopic);
+
+    if (topicIdx !== -1 && topicIdx < topics.length - 1) {
+      nextTopic = topics[topicIdx + 1];
+    } else if (topicIdx !== -1 && eliteTopics.length > 0) {
+      nextTopic = eliteTopics[0];
+    } else if (eliteIdx !== -1 && eliteIdx < eliteTopics.length - 1) {
+      nextTopic = eliteTopics[eliteIdx + 1];
+    } else {
+      // End of chapter, find next chapter
+      const chapterIdx = selectedSection.chapters.indexOf(selectedChapter);
+      if (chapterIdx !== -1 && chapterIdx < selectedSection.chapters.length - 1) {
+        nextChapter = selectedSection.chapters[chapterIdx + 1];
+        nextTopic = nextChapter.topics[0];
+      } else {
+        // End of section, find next section
+        const sectionIdx = CURRICULUM.indexOf(selectedSection);
+        if (sectionIdx !== -1 && sectionIdx < CURRICULUM.length - 1) {
+          nextSection = CURRICULUM[sectionIdx + 1];
+          nextChapter = nextSection.chapters[0];
+          nextTopic = nextChapter.topics[0];
+        } else {
+          // Wrap around or stop
+          nextSection = CURRICULUM[0];
+          nextChapter = nextSection.chapters[0];
+          nextTopic = nextChapter.topics[0];
+        }
+      }
+    }
+
+    if (nextTopic) {
+      setSelectedSection(nextSection);
+      startLearnSession(nextChapter, nextTopic, learnMode);
+    }
+  };
+
   return (
     <div className="min-h-screen font-sans selection:bg-gemini-blue/30 selection:text-white gemini-gradient">
       <AnimatePresence mode="wait">
@@ -204,6 +252,7 @@ export default function App() {
             setInput={setInput}
             onSend={handleSendMessage}
             onNext={nextChallenge}
+            onNextTopic={handleNextTopic}
             onSwitchMode={switchMode}
             onImageExpand={setFullScreenImage}
             onBack={() => setView("section")}
@@ -477,7 +526,7 @@ function ModeSelectBtn({ label, sub, icon, onClick }: any) {
 }
 
 function LearnView({ 
-  section, chapter, topic, mode, messages, loading, input, setInput, onSend, onNext, onSwitchMode, onImageExpand, onBack, scrollRef 
+  section, chapter, topic, mode, messages, loading, input, setInput, onSend, onNext, onNextTopic, onSwitchMode, onImageExpand, onBack, scrollRef 
 }: any) {
   return (
     <motion.div 
@@ -499,10 +548,20 @@ function LearnView({
               <h3 className="text-lg md:text-xl font-bold text-white leading-none font-sans truncate max-w-[200px] md:max-w-none">{topic}</h3>
             </div>
           </div>
-          <div className="flex items-center gap-2 md:gap-3 bg-white/5 p-1 rounded-xl md:rounded-2xl border border-white/10 md:mr-4 font-sans scale-90 md:scale-100 origin-left">
-            <ModeTab active={mode === "quiz"} label="Quiz" onClick={() => onSwitchMode("quiz")} />
-            <ModeTab active={mode === "explain"} label="Explain" onClick={() => onSwitchMode("explain")} />
-            <ModeTab active={mode === "case"} label="Case" onClick={() => onSwitchMode("case")} />
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="flex items-center gap-2 md:gap-3 bg-white/5 p-1 rounded-xl md:rounded-2xl border border-white/10 font-sans scale-90 md:scale-100 origin-right">
+              <ModeTab active={mode === "quiz"} label="Quiz" onClick={() => onSwitchMode("quiz")} />
+              <ModeTab active={mode === "explain"} label="Explain" onClick={() => onSwitchMode("explain")} />
+              <ModeTab active={mode === "case"} label="Case" onClick={() => onSwitchMode("case")} />
+            </div>
+            
+            <button 
+              onClick={onNextTopic}
+              className="px-4 py-2 bg-gemini-blue/10 hover:bg-gemini-blue/20 border border-gemini-blue/30 text-gemini-blue rounded-xl md:rounded-2xl text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 group whitespace-nowrap"
+            >
+              <span>Next Topic</span>
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
         </header>
 
