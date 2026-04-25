@@ -10,11 +10,37 @@
   --color-gemini-purple: #8a2be2;
   --color-gemini-cyan: #00f5ff;
   --color-gemini-bg: #0a0a0f;
+
+  /* Theme-specific variables will be defined in @layer base */
 }
 
 @layer base {
+  :root {
+    --app-bg: #0a0a0f;
+    --app-text: #ffffff;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --card-border: rgba(255, 255, 255, 0.1);
+    --accent-glow: rgba(30, 144, 255, 0.3);
+    --secondary-text: rgba(255, 255, 255, 0.6);
+    --header-text: #00f5ff;
+    --elite-accent: #f59e0b;
+    --elite-bg: rgba(245, 158, 11, 0.05);
+  }
+
+  :root.light {
+    --app-bg: #f8fafc;
+    --app-text: #0f172a;
+    --card-bg: #ffffff;
+    --card-border: rgba(0, 0, 0, 0.1);
+    --accent-glow: rgba(30, 144, 255, 0.1);
+    --secondary-text: #334155;
+    --header-text: #1d4ed8;
+    --elite-accent: #b45309;
+    --elite-bg: #fef3c7;
+  }
+
   html, body {
-    @apply bg-gemini-bg text-white antialiased overflow-x-hidden font-sans;
+    @apply bg-[var(--app-bg)] text-[var(--app-text)] antialiased overflow-x-hidden font-sans transition-colors duration-300;
     font-feature-settings: "ss01", "ss02", "cv01";
   }
 
@@ -32,25 +58,39 @@
 
 @layer utilities {
   .gemini-gradient {
+    transition: background 0.3s ease;
     background: radial-gradient(circle at 0% 0%, rgba(30, 144, 255, 0.15) 0%, transparent 50%),
                 radial-gradient(circle at 100% 100%, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
-                #0a0a0f;
+                var(--app-bg);
   }
 
   .glass-card {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+    background-color: var(--card-bg);
+    backdrop-filter: blur(24px);
+    border: 1px solid var(--card-border);
   }
 
   .glass-card-hover {
-    @apply hover:bg-white/10 hover:border-white/20 transition-all duration-300;
+    @apply transition-all duration-300;
+  }
+  .glass-card-hover:hover {
+    background-color: color-mix(in srgb, var(--card-bg), white 5%);
+    border-color: color-mix(in srgb, var(--card-border), white 20%);
+  }
+  .light .glass-card-hover:hover {
+    background-color: color-mix(in srgb, var(--card-bg), black 2%);
+    border-color: color-mix(in srgb, var(--card-border), black 10%);
   }
 
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-gemini-blue via-gemini-cyan to-gemini-purple;
   }
+  .light .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600;
+  }
 
   .gemini-glow {
-    box-shadow: 0 0 40px -10px rgba(30, 144, 255, 0.3);
+    box-shadow: 0 0 40px -10px var(--accent-glow);
   }
 
   .animate-float {
@@ -73,71 +113,117 @@
 
   /* Markdown Sheet Styling */
   .study-sheet {
-    @apply space-y-6 text-gray-200 overflow-visible;
+    @apply space-y-6 overflow-visible;
+    color: var(--app-text);
   }
   .study-sheet h1, .study-sheet h2 {
-    @apply text-gemini-cyan font-extrabold border-none pb-0 mt-10 mb-6 flex items-center gap-2 text-2xl md:text-3xl tracking-tight;
+    color: var(--header-text);
+    @apply font-extrabold border-none pb-0 mt-10 mb-6 flex items-center gap-2 text-2xl md:text-3xl tracking-tight;
   }
   .study-sheet h3 {
-    @apply text-gemini-cyan font-bold mt-8 mb-4 text-xl md:text-2xl;
+    color: var(--header-text);
+    @apply font-bold mt-8 mb-4 text-xl md:text-2xl;
   }
   .study-sheet p {
-    @apply leading-relaxed mb-6 text-gray-300;
+    @apply leading-relaxed mb-6;
+    color: var(--secondary-text);
+  }
+  .light .study-sheet p {
+    color: #1e293b;
+    @apply font-medium;
   }
   .study-sheet strong {
-    @apply text-white font-bold;
+    color: var(--app-text);
+    @apply font-bold;
+  }
+  .light .study-sheet strong {
+    color: #0f172a;
+    @apply font-extrabold;
   }
   .study-sheet em {
-    @apply text-gemini-cyan italic not-italic font-medium;
+    color: var(--header-text);
+    @apply italic not-italic font-medium;
+  }
+  .light .study-sheet em {
+    color: #1d4ed8;
+    @apply font-bold border-b border-blue-200;
   }
   .study-sheet ul, .study-sheet ol {
     @apply ml-4 space-y-4 my-6;
   }
   .study-sheet li {
-    @apply list-none relative pl-6 text-gray-300;
+    @apply list-none relative pl-6;
+    color: var(--secondary-text);
+  }
+  .light .study-sheet li {
+    color: #334155;
+    @apply font-medium;
   }
   .study-sheet li::before {
     content: "•";
     @apply absolute left-0 text-gemini-blue font-bold;
   }
   .study-sheet blockquote {
-    @apply border-l-4 border-gemini-purple bg-gemini-purple/10 p-4 rounded-r-xl italic my-6;
+    @apply border-l-4 border-gemini-purple bg-gemini-purple/5 p-4 rounded-r-xl italic my-6;
+  }
+  .light .study-sheet blockquote {
+    @apply bg-indigo-50 border-indigo-400 text-indigo-700;
   }
   .study-sheet code {
-    @apply bg-white/10 px-1.5 py-0.5 rounded font-mono text-sm text-gemini-cyan;
+    @apply px-1.5 py-0.5 rounded font-mono text-sm;
+    background-color: var(--card-bg);
+    color: var(--header-text);
   }
   /* Enhanced Medical Tables */
   .study-sheet table {
-    @apply w-full border-collapse my-8 bg-white/5 rounded-2xl overflow-hidden border border-white/10 shadow-2xl block md:table overflow-x-auto;
+    @apply w-full border-collapse my-8 rounded-2xl overflow-hidden shadow-2xl block md:table overflow-x-auto;
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border);
   }
   .study-sheet th {
-    @apply bg-gemini-blue/20 text-gemini-cyan p-4 text-left font-bold border-b border-white/10 text-[10px] md:text-xs uppercase tracking-widest;
+    @apply p-4 text-left font-bold text-[10px] md:text-xs uppercase tracking-widest;
+    background-color: color-mix(in srgb, var(--gemini-blue), transparent 80%);
+    color: var(--header-text);
+    border-bottom: 1px solid var(--card-border);
+  }
+  .light .study-sheet th {
+    @apply bg-blue-50 text-blue-700;
   }
   .study-sheet td {
-    @apply p-4 border-b border-white/5 text-xs md:text-sm leading-relaxed text-gray-300;
+    @apply p-4 text-xs md:text-sm leading-relaxed;
+    color: var(--secondary-text);
+    border-bottom: 1px solid var(--card-border);
   }
   .study-sheet tr:last-child td {
     @apply border-b-0;
   }
   .study-sheet tr:hover td {
-    @apply bg-white/5 transition-colors;
+    background-color: color-mix(in srgb, var(--card-bg), white 5%);
+    transition: background-color 0.2s ease;
+  }
+  .light .study-sheet tr:hover td {
+    background-color: #f1f5f9;
   }
   .study-sheet img {
-    @apply rounded-2xl border border-white/10 my-4 w-full max-h-[400px] object-contain bg-white shadow-xl transition-transform hover:scale-[1.02] cursor-zoom-in min-h-[100px] p-2;
+    @apply rounded-2xl my-4 w-full max-h-[400px] object-contain bg-white shadow-xl transition-transform hover:scale-[1.02] cursor-zoom-in min-h-[100px] p-2;
+    border: 1px solid var(--card-border);
     display: block;
   }
   .study-sheet img::before {
     content: "📷 Physiology Visualization Loading/Missing...";
-    @apply flex items-center justify-center w-full h-[150px] bg-white/5 text-gray-500 text-xs rounded-2xl border border-dashed border-white/10;
+    @apply flex items-center justify-center w-full h-[150px] text-gray-500 text-xs rounded-2xl border border-dashed;
+    background-color: var(--card-bg);
+    border-color: var(--card-border);
   }
   /* Handle multiple images in a sequence better */
   .study-sheet p:has(img) {
     @apply flex flex-col gap-4 items-center;
   }
   .study-sheet .katex-display {
-    @apply my-6 p-4 bg-white/5 rounded-2xl overflow-x-auto;
+    @apply my-6 p-4 rounded-2xl overflow-x-auto;
+    background-color: var(--card-bg);
   }
   .study-sheet .katex {
-    @apply text-gemini-cyan;
+    color: var(--header-text);
   }
 }

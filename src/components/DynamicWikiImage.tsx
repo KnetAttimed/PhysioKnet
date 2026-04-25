@@ -113,10 +113,10 @@ export function DynamicWikiImage({ title, onExpand }: DynamicWikiImageProps) {
 
   if (loading) {
     return (
-      <div className="w-full aspect-video bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center animate-pulse my-6">
+      <div className="w-full aspect-video bg-[var(--card-bg)] rounded-3xl border border-[var(--card-border)] flex items-center justify-center animate-pulse my-6">
         <div className="flex flex-col items-center gap-2">
           <Loader2 className="w-6 h-6 text-gemini-blue animate-spin" />
-          <span className="text-[10px] uppercase tracking-widest text-gray-500">Connecting Neural Search Nodes...</span>
+          <span className="text-[10px] uppercase tracking-widest text-[var(--secondary-text)]">Connecting Neural Search Nodes...</span>
         </div>
       </div>
     );
@@ -128,13 +128,13 @@ export function DynamicWikiImage({ title, onExpand }: DynamicWikiImageProps) {
     
     return (
       <div className="group/wiki my-6 relative max-w-2xl mx-auto">
-        <div className="glass-card rounded-2xl overflow-hidden border-2 border-dashed border-amber-500/20 hover:border-amber-500/50 transition-all bg-black/40">
+        <div className="glass-card rounded-2xl overflow-hidden border-2 border-dashed border-amber-500/20 hover:border-amber-500/50 transition-all bg-[var(--app-bg)]/40">
           <div className="relative min-h-[300px] flex flex-col items-center justify-center p-8 text-center">
             <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mb-6">
               <Search className="w-8 h-8 text-amber-500" />
             </div>
-            <h4 className="text-xl font-bold text-white mb-2 font-sans">Research Node Required</h4>
-            <p className="text-gray-400 text-sm mb-8 max-w-sm mx-auto font-sans leading-relaxed">
+            <h4 className="text-xl font-bold text-[var(--app-text)] mb-2 font-sans">Research Node Required</h4>
+            <p className="text-[var(--secondary-text)] text-sm mb-8 max-w-sm mx-auto font-sans leading-relaxed">
               Specific mechanistic diagram for <span className="text-amber-400 font-bold">"{cleanTitle}"</span> was not found in our local neural pool.
             </p>
             
@@ -149,11 +149,11 @@ export function DynamicWikiImage({ title, onExpand }: DynamicWikiImageProps) {
               <ExternalLink className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
             </a>
             
-            <div className="mt-8 pt-8 border-t border-white/5 w-full">
-               <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-4">Neural Visualization Logic</div>
+            <div className="mt-8 pt-8 border-t border-[var(--card-border)] w-full">
+               <div className="text-[10px] text-[var(--secondary-text)] uppercase tracking-widest mb-4">Neural Visualization Logic</div>
                <div className="flex justify-center gap-4">
-                  <div className="px-3 py-1 bg-white/5 rounded-full text-[10px] text-gray-400 border border-white/10">Multi-stage Search: FAILED</div>
-                  <div className="px-3 py-1 bg-white/5 rounded-full text-[10px] text-gray-400 border border-white/10">Recommendation: External Study</div>
+                  <div className="px-3 py-1 bg-[var(--card-bg)] rounded-full text-[10px] text-[var(--secondary-text)] border border-[var(--card-border)]">Multi-stage Search: FAILED</div>
+                  <div className="px-3 py-1 bg-[var(--card-bg)] rounded-full text-[10px] text-[var(--secondary-text)] border border-[var(--card-border)]">Recommendation: External Study</div>
                </div>
             </div>
           </div>
@@ -166,7 +166,7 @@ export function DynamicWikiImage({ title, onExpand }: DynamicWikiImageProps) {
 
   return (
     <div className="group/wiki my-6 relative max-w-2xl mx-auto">
-      <div className="glass-card rounded-2xl overflow-hidden border border-white/5 hover:border-gemini-blue/30 transition-all shadow-xl">
+      <div className="glass-card rounded-2xl overflow-hidden border border-[var(--card-border)] hover:border-gemini-blue/30 transition-all shadow-xl">
         <div className="relative bg-white min-h-[150px] flex items-center justify-center p-4">
           <img 
             src={currentImage.url} 
@@ -219,7 +219,7 @@ export function DynamicWikiImage({ title, onExpand }: DynamicWikiImageProps) {
           </div>
         </div>
       </div>
-      <div className="mt-2 text-[9px] text-gray-500 font-mono px-2 flex items-center justify-between">
+      <div className="mt-2 text-[9px] text-[var(--secondary-text)] font-mono px-2 flex items-center justify-between">
         <span>Image Node {currentIndex + 1} of {images.length} sourced from Open Atlas</span>
         <button onClick={rotateImage} className="text-gemini-cyan hover:underline">Incorrect image? Shuffle nodes</button>
       </div>

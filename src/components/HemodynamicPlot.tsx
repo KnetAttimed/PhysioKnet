@@ -60,7 +60,7 @@ export function HemodynamicPlot() {
     const fillingPoints = edpvrPoints.filter(pt => pt.v >= ves && pt.v <= ved);
     const fullLoop = [...loopPoints, ...fillingPoints];
 
-    return { ves, pes, ped, sv, ef, sw, co, espvrPoints, edpvrPoints, fullLoop, eaLine: [{v: ved, p:0}, {v: ves, p: pes}] };
+    return { ved, ves, pes, ped, sv, ef, sw, co, espvrPoints, edpvrPoints, fullLoop, eaLine: [{v: ved, p:0}, {v: ves, p: pes}] };
   }, [ved, ees, ea]);
 
   return (
@@ -73,7 +73,7 @@ export function HemodynamicPlot() {
           <div className="flex items-center gap-2 text-gemini-cyan font-bold uppercase tracking-[0.2em] text-[10px]">
             <Activity className="w-4 h-4" /> Advanced Hemodynamic Lab
           </div>
-          <h3 className="text-3xl font-extrabold text-white font-sans tracking-tight">Left Ventricular PV Dynamics</h3>
+          <h3 className="text-3xl font-extrabold text-[var(--app-text)] font-sans tracking-tight">Left Ventricular PV Dynamics</h3>
         </div>
 
         <div className="flex flex-wrap gap-3">
@@ -84,25 +84,27 @@ export function HemodynamicPlot() {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        <div className="lg:col-span-8 bg-black/60 rounded-3xl p-6 border border-white/5 relative shadow-inner group">
+        <div className="lg:col-span-8 bg-[var(--app-bg)]/80 rounded-3xl p-6 border border-[var(--card-border)] relative shadow-inner group">
           <ResponsiveContainer width="100%" height={400}>
             <ScatterChart margin={{ top: 20, right: 30, bottom: 20, left: 10 }}>
               <XAxis 
-                type="number" dataKey="v" name="Volume" unit="mL" domain={[0, 200]} stroke="#333" 
-                tick={{fontSize: 11, fill: '#666'}} axisLine={false} tickLine={false}
+                type="number" dataKey="v" name="Volume" unit="mL" domain={[0, 200]} stroke="currentColor" 
+                className="text-[var(--secondary-text)]"
+                tick={{fontSize: 11, fill: 'currentColor'}} axisLine={false} tickLine={false}
               />
               <YAxis 
-                type="number" dataKey="p" name="Pressure" unit="mmHg" domain={[0, 180]} stroke="#333" 
-                tick={{fontSize: 11, fill: '#666'}} axisLine={false} tickLine={false}
+                type="number" dataKey="p" name="Pressure" unit="mmHg" domain={[0, 180]} stroke="currentColor" 
+                className="text-[var(--secondary-text)]"
+                tick={{fontSize: 11, fill: 'currentColor'}} axisLine={false} tickLine={false}
               />
               <Tooltip 
-                contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '12px', color: '#fff' }}
+                contentStyle={{ backgroundColor: 'var(--app-bg)', border: '1px solid var(--card-border)', borderRadius: '12px', color: 'var(--app-text)' }}
                 itemStyle={{ color: '#00f5ff' }}
                />
               
               {/* Static Reference Curves */}
-              <Scatter name="ESPVR" data={physics.espvrPoints} line={{ stroke: '#ffffff22', strokeDasharray: '5 5' }} shape={() => null} />
-              <Scatter name="EDPVR" data={physics.edpvrPoints} line={{ stroke: '#ffffff22', strokeDasharray: '5 5' }} shape={() => null} />
+              <Scatter name="ESPVR" data={physics.espvrPoints} line={{ stroke: 'var(--secondary-text)', strokeOpacity: 0.2, strokeDasharray: '5 5' }} shape={() => null} />
+              <Scatter name="EDPVR" data={physics.edpvrPoints} line={{ stroke: 'var(--secondary-text)', strokeOpacity: 0.2, strokeDasharray: '5 5' }} shape={() => null} />
               
               {/* Arterial Elastance Line (Ea) */}
               <Scatter name="Ea" data={physics.eaLine} line={{ stroke: '#8a2be244', strokeWidth: 1 }} shape={() => null} />
@@ -131,27 +133,27 @@ export function HemodynamicPlot() {
               </defs>
 
               {/* Labels */}
-              <ReferenceLine x={physics.ves} stroke="#ffffff11" />
-              <ReferenceLine x={physics.ved} stroke="#ffffff11" />
+              <ReferenceLine x={physics.ves} stroke="var(--card-border)" />
+              <ReferenceLine x={physics.ved} stroke="var(--card-border)" />
             </ScatterChart>
           </ResponsiveContainer>
 
-          <div className="mt-4 flex justify-between px-4 text-[10px] text-gray-500 font-mono tracking-widest uppercase">
+          <div className="mt-4 flex justify-between px-4 text-[10px] text-[var(--secondary-text)] font-mono tracking-widest uppercase">
             <span>Volume (mL)</span>
             <span className="text-gemini-cyan">ESPVR (Inotropy)</span>
             <span>Pressure (mmHg)</span>
           </div>
 
-          <div className="absolute bottom-10 left-10 p-4 rounded-xl bg-black/40 backdrop-blur border border-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-             <div className="text-[10px] text-gray-600 font-bold mb-1">LOOP ANALYSIS</div>
-             <div className="text-xs text-gray-400">Total Stroke Work: <span className="text-white">High</span></div>
-             <div className="text-xs text-gray-400">Compliance: <span className="text-white">Normal</span></div>
+          <div className="absolute bottom-10 left-10 p-4 rounded-xl bg-[var(--card-bg)] backdrop-blur border border-[var(--card-border)] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+             <div className="text-[10px] text-[var(--secondary-text)] font-bold mb-1">LOOP ANALYSIS</div>
+             <div className="text-xs text-[var(--app-text)] opacity-70">Total Stroke Work: <span className="text-[var(--app-text)] opacity-100 font-bold">High</span></div>
+             <div className="text-xs text-[var(--app-text)] opacity-70">Compliance: <span className="text-[var(--app-text)] opacity-100 font-bold">Normal</span></div>
           </div>
         </div>
 
         <div className="lg:col-span-4 space-y-8">
-           <div className="glass-card p-6 rounded-2xl border border-white/5 space-y-8">
-              <h4 className="flex items-center gap-2 text-white font-bold text-sm">
+           <div className="glass-card p-6 rounded-2xl border border-[var(--card-border)] space-y-8">
+              <h4 className="flex items-center gap-2 text-[var(--app-text)] font-bold text-sm">
                 <Sliders className="w-4 h-4 text-gemini-blue" /> System Parameters
               </h4>
 
@@ -182,12 +184,12 @@ export function HemodynamicPlot() {
                 color="accent-gemini-purple" 
               />
 
-              <div className="pt-4 p-4 bg-white/5 rounded-xl border border-white/5">
-                <div className="flex gap-2 text-blue-400 mb-1">
+              <div className="pt-4 p-4 bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)]">
+                <div className="flex gap-2 text-gemini-blue mb-1">
                   <Info className="w-3 h-3" />
                   <span className="text-[10px] font-bold uppercase tracking-wider">Clinical Insight</span>
                 </div>
-                <p className="text-[11px] text-gray-400 leading-relaxed italic">
+                <p className="text-[11px] text-[var(--secondary-text)] leading-relaxed italic">
                   Higher Afterload reduces Stroke Volume and Ejection Fraction.
                   Compare this to Heart Failure (Reduced Ees).
                 </p>
@@ -201,8 +203,8 @@ export function HemodynamicPlot() {
 
 function MetricCard({ label, value, unit, color }: any) {
   return (
-    <div className="bg-white/5 border border-white/5 px-6 py-4 rounded-3xl min-w-[140px] shadow-lg">
-      <div className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">{label}</div>
+    <div className="bg-[var(--card-bg)] border border-[var(--card-border)] px-6 py-4 rounded-3xl min-w-[140px] shadow-lg">
+      <div className="text-[10px] text-[var(--secondary-text)] uppercase font-bold tracking-widest mb-1">{label}</div>
       <div className={`text-2xl font-black font-mono ${color}`}>
         {value}<span className="text-xs ml-1 font-normal opacity-50">{unit}</span>
       </div>
@@ -215,15 +217,15 @@ function ControlSlider({ label, sub, value, min, max, step, onChange, color }: a
     <div className="space-y-3">
       <div className="flex justify-between items-end">
         <div>
-          <div className="text-xs text-white font-bold">{label}</div>
-          <div className="text-[10px] text-gray-500">{sub}</div>
+          <div className="text-xs text-[var(--app-text)] font-bold">{label}</div>
+          <div className="text-[10px] text-[var(--secondary-text)]">{sub}</div>
         </div>
         <div className="text-sm font-mono font-bold text-gemini-cyan">{value.toFixed(1)}</div>
       </div>
       <input 
         type="range" min={min} max={max} step={step} 
         value={value} onChange={(e) => onChange(Number(e.target.value))}
-        className={`w-full ${color} bg-white/10 h-1.5 rounded-lg appearance-none cursor-pointer hover:bg-white/20 transition-colors`}
+        className={`w-full ${color} bg-[var(--card-bg)] h-1.5 rounded-lg appearance-none cursor-pointer hover:bg-opacity-80 transition-all`}
       />
     </div>
   );

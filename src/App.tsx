@@ -20,8 +20,43 @@ import {
   ExternalLink,
   Maximize2,
   Search,
-  Info
+  Info,
+  Sun,
+  Moon
 } from "lucide-react";
+
+function ThemeToggle({ theme, setTheme }: { theme: "dark" | "light", setTheme: (t: "dark" | "light") => void }) {
+  return (
+    <button
+      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      className="fixed bottom-6 right-6 z-[110] p-4 rounded-2xl glass-card glass-card-hover shadow-2xl flex items-center justify-center group"
+    >
+      <AnimatePresence mode="wait">
+        {theme === "dark" ? (
+          <motion.div
+            key="moon"
+            initial={{ opacity: 0, rotate: -45, scale: 0.8 }}
+            animate={{ opacity: 1, rotate: 0, scale: 1 }}
+            exit={{ opacity: 0, rotate: 45, scale: 0.8 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Moon className="w-6 h-6 text-gemini-cyan" />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="sun"
+            initial={{ opacity: 0, rotate: -45, scale: 0.8 }}
+            animate={{ opacity: 1, rotate: 0, scale: 1 }}
+            exit={{ opacity: 0, rotate: 45, scale: 0.8 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Sun className="w-6 h-6 text-amber-500" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </button>
+  );
+}
 import { CURRICULUM, Section, Chapter } from "./data/curriculum";
 import { generateStudyContent, QuizQuestion } from "./lib/gemini";
 import { DynamicWikiImage } from "./components/DynamicWikiImage";
@@ -67,7 +102,17 @@ function NeuralContent({ content, onImageExpand }: { content: string, onImageExp
 
 export default function App() {
   const [view, setView] = useState<View>("home");
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [selectedSection, setSelectedSection] = useState<Section | null>(null);
+
+  useEffect(() => {
+    if (theme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  }, [theme]);
+  
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [learnMode, setLearnMode] = useState<Mode>("quiz");
@@ -220,7 +265,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen font-sans selection:bg-gemini-blue/30 selection:text-white gemini-gradient">
+    <div className="min-h-screen font-sans selection:bg-gemini-blue/30 selection:text-[var(--app-text)] gemini-gradient">
       <AnimatePresence mode="wait">
         {view === "home" && (
           <HomeView 
@@ -323,6 +368,8 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      <ThemeToggle theme={theme} setTheme={setTheme} />
     </div>
   );
 }
@@ -345,7 +392,7 @@ function HomeView({ onSelectSection, onSearchSelect }: { onSelectSection: (s: Se
         <h1 className="text-4xl md:text-8xl font-extrabold text-gradient mb-4 tracking-tight font-sans">
           KnetPhysio 🧠✨
         </h1>
-        <p className="text-base md:text-xl text-gray-400 max-w-2xl font-light leading-relaxed font-sans mb-12">
+        <p className="text-base md:text-xl text-[var(--secondary-text)] max-w-2xl font-light leading-relaxed font-sans mb-12">
           The ultimate Physiology Mastery Engine. Powered by mechanistic AI for elite students. 🚀
         </p>
 
@@ -363,9 +410,9 @@ function HomeView({ onSelectSection, onSearchSelect }: { onSelectSection: (s: Se
           >
             <div className="absolute top-0 right-0 w-24 md:w-32 h-24 md:h-32 bg-gradient-to-br from-white/10 to-transparent rounded-bl-full translate-x-8 -translate-y-8 group-hover:scale-110 transition-transform" />
             <div className="text-3xl md:text-4xl mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-500">{section.icon}</div>
-            <div className="font-sans text-[8px] md:text-[10px] tracking-widest text-gray-500 uppercase mb-1 md:mb-2">Section {section.section}</div>
-            <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-white group-hover:text-gemini-blue transition-colors font-sans leading-tight">{section.title}</h3>
-            <div className="flex items-center justify-between text-[10px] md:text-sm text-gray-500 font-sans">
+            <div className="font-sans text-[8px] md:text-[10px] tracking-widest text-[var(--secondary-text)] uppercase mb-1 md:mb-2">Section {section.section}</div>
+            <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-[var(--app-text)] group-hover:text-gemini-blue transition-colors font-sans leading-tight">{section.title}</h3>
+            <div className="flex items-center justify-between text-[10px] md:text-sm text-[var(--secondary-text)] font-sans">
               <span>{section.chapters.length} Sub-chapters</span>
               <span className="opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 transition-transform">Explore →</span>
             </div>
@@ -385,7 +432,7 @@ function SectionView({ section, onBack, onTopicSelect, onFastStart }: any) {
       exit={{ opacity: 0, x: -20 }}
       className="max-w-5xl mx-auto px-6 py-8 md:py-12"
     >
-      <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 md:mb-12 transition-colors font-sans text-[10px] md:text-xs uppercase tracking-widest">
+      <button onClick={onBack} className="flex items-center gap-2 text-[var(--secondary-text)] hover:text-[var(--app-text)] mb-8 md:mb-12 transition-colors font-sans text-[10px] md:text-xs uppercase tracking-widest">
         <ChevronLeft className="w-4 h-4" /> Back to Dashboard 🏠
       </button>
 
@@ -397,11 +444,11 @@ function SectionView({ section, onBack, onTopicSelect, onFastStart }: any) {
 
       <div className="space-y-4 md:space-y-6">
         {section.chapters?.map((chapter: Chapter) => (
-          <div key={chapter.id} className="glass-card rounded-2xl md:rounded-3xl p-6 md:p-8 hover:border-white/20 transition-colors">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-8 border-b border-white/5 pb-6">
+          <div key={chapter.id} className="glass-card rounded-2xl md:rounded-3xl p-6 md:p-8 hover:border-[var(--card-border)] transition-colors">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-8 border-b border-[var(--card-border)] pb-6">
               <div className="flex-1">
-                <div className="font-sans text-[10px] text-gray-500 uppercase mb-1">Chapter {chapter.num}</div>
-                <h4 className="text-xl md:text-2xl font-bold text-white leading-tight font-sans">{chapter.title}</h4>
+                <div className="font-sans text-[10px] text-[var(--secondary-text)] uppercase mb-1">Chapter {chapter.num}</div>
+                <h4 className="text-xl md:text-2xl font-bold text-[var(--app-text)] leading-tight font-sans">{chapter.title}</h4>
               </div>
               <div className="flex gap-2">
                 <button 
@@ -416,7 +463,7 @@ function SectionView({ section, onBack, onTopicSelect, onFastStart }: any) {
             
             <div className="space-y-6">
               <div>
-                <div className="text-[10px] font-sans text-gray-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                <div className="text-[10px] font-sans text-[var(--secondary-text)] opacity-60 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-gray-600 rounded-full" />
                   Standard Curriculum (Berne & Levy)
                 </div>
@@ -425,7 +472,7 @@ function SectionView({ section, onBack, onTopicSelect, onFastStart }: any) {
                     <button
                       key={i}
                       onClick={() => onTopicSelect({ chapter, topic })}
-                      className="group px-4 py-2 bg-white/5 border border-white/5 rounded-xl text-sm text-gray-400 hover:bg-gemini-blue/10 hover:text-white transition-all hover:border-gemini-blue/30 font-sans"
+                      className="group px-4 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-sm text-[var(--secondary-text)] hover:bg-gemini-blue/10 hover:text-gemini-blue transition-all hover:border-gemini-blue/30 font-sans"
                     >
                       {topic}
                     </button>
@@ -444,10 +491,10 @@ function SectionView({ section, onBack, onTopicSelect, onFastStart }: any) {
                       <button
                         key={i}
                         onClick={() => onTopicSelect({ chapter, topic })}
-                        className="group px-4 py-2 bg-amber-500/5 border border-amber-500/10 rounded-xl text-sm text-amber-200/60 hover:bg-amber-500/20 hover:text-amber-100 transition-all hover:border-amber-500/40 font-sans flex items-center gap-2"
+                        className="group px-4 py-2 bg-[var(--elite-bg)] border border-[var(--elite-accent)]/20 rounded-xl text-sm text-[var(--elite-accent)] hover:bg-[var(--elite-accent)]/20 transition-all hover:border-[var(--elite-accent)]/40 font-sans flex items-center gap-2"
                       >
-                        <div className="w-1 h-1 bg-amber-500 rounded-full" />
-                        {topic}
+                        <div className="w-1 h-1 bg-[var(--elite-accent)] rounded-full" />
+                        {topic} <Zap className="w-3 h-3 text-amber-500 fill-amber-500 inline" />
                       </button>
                     ))}
                   </div>
@@ -464,26 +511,25 @@ function SectionView({ section, onBack, onTopicSelect, onFastStart }: any) {
 function TopicModal({ chapter, topic, onClose, onSelectMode }: any) {
   return (
     <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-gemini-bg/80 backdrop-blur-md"
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[var(--app-bg)]/80 backdrop-blur-md"
     >
       <motion.div 
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
         className="glass-card w-full max-w-md rounded-3xl p-8 relative overflow-hidden"
       >
         <div className="absolute top-0 right-0 p-4">
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+          <button onClick={onClose} className="p-2 hover:bg-[var(--card-bg)] rounded-xl transition-colors">
+            <X className="w-5 h-5 text-[var(--secondary-text)]" />
           </button>
         </div>
         
         <div className="font-sans text-[10px] text-gemini-cyan uppercase mb-2 tracking-[0.2em]">Select Analysis Mode</div>
-        <h3 className="text-2xl font-bold text-white mb-2 leading-tight font-sans">{topic}</h3>
-        <p className="text-gray-500 text-sm mb-8 font-sans">Chapter {chapter.num}: {chapter.title}</p>
+        <h3 className="text-2xl font-bold text-[var(--app-text)] mb-2 leading-tight font-sans">{topic}</h3>
+        <p className="text-[var(--secondary-text)] text-sm mb-8 font-sans">Chapter {chapter.num}: {chapter.title}</p>
 
         <div className="space-y-3">
           <ModeSelectBtn 
@@ -514,12 +560,12 @@ function ModeSelectBtn({ label, sub, icon, onClick }: any) {
   return (
     <button 
       onClick={onClick}
-      className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/20 hover:bg-white/10 transition-all text-left"
+      className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)] hover:border-[var(--gemini-blue)]/50 hover:bg-[var(--gemini-blue)]/5 transition-all text-left"
     >
-      <div className="p-3 rounded-xl bg-white/5">{icon}</div>
+      <div className="p-3 rounded-xl bg-[var(--card-bg)] shadow-sm">{icon}</div>
       <div>
-        <div className="text-white font-bold text-sm tracking-tight">{label}</div>
-        <div className="text-gray-500 text-xs">{sub}</div>
+        <div className="text-[var(--app-text)] font-bold text-sm tracking-tight">{label}</div>
+        <div className="text-[var(--secondary-text)] text-xs">{sub}</div>
       </div>
     </button>
   );
@@ -538,18 +584,23 @@ function LearnView({
       <div className="max-w-6xl w-full mx-auto flex flex-col h-full">
         <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 md:mb-8">
           <div className="flex items-center gap-3 md:gap-4">
-            <button onClick={onBack} className="p-2 md:p-3 hover:bg-white/10 rounded-xl md:rounded-2xl transition-colors border border-white/10">
-              <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 text-gray-400" />
+            <button onClick={onBack} className="p-2 md:p-3 hover:bg-[var(--card-bg)] rounded-xl md:rounded-2xl transition-colors border border-[var(--card-border)] text-[var(--secondary-text)] hover:text-[var(--app-text)]">
+              <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
             </button>
             <div>
-              <div className="font-sans text-[8px] md:text-[10px] text-gray-500 uppercase tracking-widest leading-none mb-1">
+              <div className="font-sans text-[8px] md:text-[10px] text-[var(--secondary-text)] uppercase tracking-widest leading-none mb-1">
                 {section.title} / Ch.{chapter.num}
               </div>
-              <h3 className="text-lg md:text-xl font-bold text-white leading-none font-sans truncate max-w-[200px] md:max-w-none">{topic}</h3>
+              <h3 className="text-lg md:text-xl font-bold text-[var(--app-text)] leading-none font-sans truncate max-w-[200px] md:max-w-none flex items-center gap-2">
+                {topic}
+                {chapter.eliteTopics?.includes(topic) && (
+                  <Zap className="w-4 h-4 text-amber-500 fill-amber-500 animate-pulse" />
+                )}
+              </h3>
             </div>
           </div>
           <div className="flex items-center gap-3 md:gap-4">
-            <div className="flex items-center gap-2 md:gap-3 bg-white/5 p-1 rounded-xl md:rounded-2xl border border-white/10 font-sans scale-90 md:scale-100 origin-right">
+            <div className="flex items-center gap-2 md:gap-3 bg-[var(--card-bg)] p-1 rounded-xl md:rounded-2xl border border-[var(--card-border)] font-sans scale-90 md:scale-100 origin-right">
               <ModeTab active={mode === "quiz"} label="Quiz" onClick={() => onSwitchMode("quiz")} />
               <ModeTab active={mode === "explain"} label="Explain" onClick={() => onSwitchMode("explain")} />
               <ModeTab active={mode === "case"} label="Case" onClick={() => onSwitchMode("case")} />
@@ -576,8 +627,8 @@ function LearnView({
               ) : (
                 <div className={`max-w-[95%] md:max-w-[90%] p-5 md:p-8 rounded-[1.5rem] md:rounded-[2rem] ${
                   msg.role === "user" 
-                    ? "bg-gemini-blue/20 border border-gemini-blue/30 text-white" 
-                    : "glass-card border-none text-gray-100 font-sans text-sm md:text-lg leading-relaxed study-sheet"
+                    ? "bg-gemini-blue font-bold text-white shadow-lg shadow-gemini-blue/20" 
+                    : "glass-card border-none text-[var(--app-text)] font-sans text-sm md:text-lg leading-relaxed study-sheet"
                 }`}>
                    <NeuralContent content={msg.content} onImageExpand={onImageExpand} />
                 </div>
@@ -586,7 +637,7 @@ function LearnView({
           ))}
           {loading && (
             <div className="flex justify-start">
-              <div className="flex items-center gap-3 font-mono text-xs text-gray-500 animate-pulse bg-white/5 px-6 py-4 rounded-3xl border border-white/10">
+              <div className="flex items-center gap-3 font-mono text-xs text-[var(--secondary-text)] animate-pulse bg-[var(--card-bg)] px-6 py-4 rounded-3xl border border-[var(--card-border)]">
                 <div className="w-1.5 h-1.5 bg-gemini-blue rounded-full animate-bounce" />
                 <div className="w-1.5 h-1.5 bg-gemini-purple rounded-full animate-bounce [animation-delay:-0.15s]" />
                 <div className="w-1.5 h-1.5 bg-gemini-cyan rounded-full animate-bounce [animation-delay:-0.3s]" />
@@ -601,7 +652,7 @@ function LearnView({
             <button 
               onClick={onNext}
               disabled={loading}
-              className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-sm font-medium transition-all flex items-center gap-2 group font-sans"
+              className="px-6 py-3 bg-[var(--card-bg)] hover:bg-gemini-blue/5 border border-[var(--card-border)] rounded-2xl text-sm font-medium transition-all flex items-center gap-2 group font-sans text-[var(--app-text)]"
             >
               <RotateCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" /> Next Module
             </button>
@@ -611,14 +662,14 @@ function LearnView({
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && onSend()}
                 placeholder="Probe neural brain..."
-                className="w-full bg-white/5 border border-white/10 py-3 px-6 pr-14 rounded-2xl text-sm focus:outline-none focus:border-gemini-blue/50 transition-all font-sans"
+                className="w-full bg-[var(--card-bg)] border border-[var(--card-border)] py-3 px-6 pr-14 rounded-2xl text-sm text-[var(--app-text)] focus:outline-none focus:border-gemini-blue/50 transition-all font-sans placeholder:text-[var(--secondary-text)]"
               />
               <button 
                 onClick={onSend}
                 disabled={loading || !input.trim()}
                 className="absolute right-2 p-2 text-gemini-blue hover:scale-110 transition-transform disabled:opacity-30"
               >
-                <Send className="w-5 h-5" />
+                <FastSendIcon />
               </button>
             </div>
           </div>
@@ -636,27 +687,27 @@ function QuizCard({ quiz, onImageExpand }: { quiz: QuizQuestion, onImageExpand: 
     <div className="max-w-[95%] md:max-w-[90%] glass-card p-5 md:p-8 rounded-[1.5rem] md:rounded-3xl border-l-4 border-l-gemini-cyan relative overflow-hidden font-sans">
       <div className="absolute top-0 right-0 w-24 h-24 bg-gemini-cyan/5 blur-3xl rounded-full" />
       <div className="font-sans text-[8px] md:text-[10px] text-gemini-cyan uppercase mb-2 md:mb-4 tracking-widest font-bold">Mechanism Validation</div>
-      <h4 className="text-lg md:text-xl font-bold mb-6 md:mb-8 text-white leading-relaxed font-sans">{quiz?.question}</h4>
+      <h4 className="text-lg md:text-xl font-bold mb-6 md:mb-8 text-[var(--app-text)] leading-relaxed font-sans">{quiz?.question}</h4>
       
       <div className="grid gap-2 md:gap-3 mb-6 md:mb-8">
         {quiz?.options?.map((opt) => {
           const isCorrect = opt.letter === quiz.answer;
           const isSelected = opt.letter === selected;
           
-          let borderColor = "border-white/10";
-          let bgColor = "bg-white/5";
+          let borderColor = "var(--card-border)";
+          let bgColor = "var(--card-bg)";
           
           if (revealed) {
             if (isCorrect) {
-              borderColor = "border-gemini-cyan";
-              bgColor = "bg-gemini-cyan/10";
+              borderColor = "var(--header-text)";
+              bgColor = "var(--elite-bg)";
             } else if (isSelected) {
-              borderColor = "border-red-500/50";
-              bgColor = "bg-red-500/10";
+              borderColor = "rgba(239, 68, 68, 0.5)";
+              bgColor = "rgba(239, 68, 68, 0.1)";
             }
           } else if (isSelected) {
-            borderColor = "border-gemini-blue";
-            bgColor = "bg-gemini-blue/10";
+            borderColor = "var(--color-gemini-blue)";
+            bgColor = "rgba(138, 43, 226, 0.1)";
           }
 
           return (
@@ -664,14 +715,15 @@ function QuizCard({ quiz, onImageExpand }: { quiz: QuizQuestion, onImageExpand: 
               key={opt.letter}
               onClick={() => !revealed && setSelected(opt.letter)}
               disabled={revealed}
-              className={`p-3 md:p-4 rounded-xl md:rounded-2xl border ${borderColor} ${bgColor} text-left transition-all hover:bg-white/10 flex items-start gap-3 md:gap-4 group`}
+              className="p-3 md:p-4 rounded-xl md:rounded-2xl border text-left transition-all hover:bg-[var(--card-bg)] hover:border-gray-400/30 flex items-start gap-3 md:gap-4 group"
+              style={{ borderColor, backgroundColor: bgColor }}
             >
               <span className={`w-5 h-5 md:w-6 md:h-6 rounded-md md:rounded-lg flex items-center justify-center font-bold text-[10px] md:text-xs shrink-0 transition-colors ${
-                isSelected ? "bg-gemini-blue text-white" : "bg-white/10 text-gray-500 group-hover:text-gray-300"
+                isSelected ? "bg-gemini-blue text-white" : "bg-[var(--card-bg)] text-[var(--secondary-text)] border border-[var(--card-border)] group-hover:text-[var(--app-text)]"
               }`}>
                 {opt.letter}
               </span>
-              <div className={`transition-colors flex-1 text-xs md:text-base ${isSelected ? "text-white" : "text-gray-400 group-hover:text-gray-300"}`}>
+              <div className={`transition-colors flex-1 text-xs md:text-base ${isSelected ? "text-[var(--app-text)] font-semibold" : "text-[var(--secondary-text)] group-hover:text-[var(--app-text)]"}`}>
                 <ReactMarkdown 
                   remarkPlugins={[remarkMath, remarkGfm]} 
                   rehypePlugins={[rehypeKatex, rehypeRaw]}
@@ -711,13 +763,17 @@ function QuizCard({ quiz, onImageExpand }: { quiz: QuizQuestion, onImageExpand: 
               <span className="text-red-400 font-bold text-[10px] md:text-sm tracking-widest font-sans">SYSTEM MISALIGNMENT</span>
             )}
           </div>
-          <div className="text-gray-300 text-xs md:text-sm leading-relaxed prose prose-invert prose-sm">
+          <div className="text-[var(--secondary-text)] opacity-90 text-xs md:text-sm leading-relaxed prose prose-invert prose-sm">
              <NeuralContent content={quiz.explanation} onImageExpand={onImageExpand} />
           </div>
         </motion.div>
       )}
     </div>
   );
+}
+
+function FastSendIcon() {
+  return <Send className="w-5 h-5" />;
 }
 
 function ModeTab({ active, label, onClick }: any) {
