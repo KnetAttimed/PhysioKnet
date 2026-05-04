@@ -10,10 +10,48 @@ export interface QuizQuestion {
   explanation: string;
 }
 
+export interface Flashcard {
+  front: string;
+  back: string;
+  reasoning: string;
+}
+
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  retries: number = 3, // Increased retries
+  backoff: number = 5000, // Increased initial backoff
+): Promise<Response> {
+  try {
+    const response = await fetch(url, options);
+
+    if (response.ok) return response;
+
+    // 429 and 503 are usually transient or rate-limit related
+    if ((response.status === 429 || response.status === 503) && retries > 0) {
+      console.warn(
+        `Gemini API Busy/Rate-Limited. Status ${response.status}. Retrying in ${backoff}ms...`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, backoff));
+      // Exponential backoff: increase wait time significantly for 429
+      const nextBackoff = response.status === 429 ? backoff * 3 : backoff * 2;
+      return fetchWithRetry(url, options, retries - 1, nextBackoff);
+    }
+
+    return response;
+  } catch (error) {
+    if (retries > 0) {
+      await new Promise((resolve) => setTimeout(resolve, backoff));
+      return fetchWithRetry(url, options, retries - 1, backoff * 2);
+    }
+    throw error;
+  }
+}
+
 export async function generateStudyContent(
-  mode: "quiz" | "explain" | "case",
+  mode: "quiz" | "explain" | "case" | "flashcard",
   chapterContent: { title: string; num: number },
-  topic: string
+  topic: string,
 ) {
   const systemInstruction = `You are the "Master Physiology Architect" for KnetPhysio. Your mission is to train the top 0.1% medical candidates using maximum intellectual density.
 
@@ -34,12 +72,13 @@ Content Architecture:
 - **Molecular Trigger**: Start with the protein/ion-level event.
 - **Feedback Loop breakage**: Explain how homeostasis fails in pathology.
 - **Quantitative Table**: Must include a "Discriminator" column (The key value that confirms a diagnosis/state).
-- **Interactive Visualizer**: If the topic involves Cardiac Mechanics, Pressure-Volume Loops, or Heart Failure, you MUST inject [HEMODYNAMIC_PLOT] to allow the student to simulate the state.
+- **IMAGE INJECTION RULE**: Scan for key physiological entities (proteins, pathways, organs) in your content.
+- **BOLDING RULE**: You MUST **bold** the names of the most critical physiological entities to trigger the "Visual Study Tokens" system.
 - **Image Injection**: 2-3 specific Wikipedia tags. 
   - RULE: **ULTRA-VARIATION MANDATORY**. Never repeat the same diagram.
   - RULE: **RELEVANCE FIRST**. Only tag images that represent the *physiological mechanism* or *anatomical structure* described. 
-  - RULE: Scan for bolded/italicized terms in your content and use those for your Tags if they are high-yield.
-  - Example Tags: [IMAGE: Action_potential_mechanisms], [IMAGE: Ion_channel_gating], [IMAGE: Nephron_physiology], [IMAGE: Cardiac_cycle_diagram].
+  - RULE: Use bolded/italicized terms in your content for your Tags.
+  - Example Tags: [IMAGE: Action_potential_mechanisms], [IMAGE: Ion_channel_gating], [IMAGE: Nephron_physiology].
   - RULE: Append "_physiology" or "_structure" to tags to avoid generic art/photography.
 
 Chapter: ${chapterContent.num} - ${chapterContent.title}
@@ -47,18 +86,28 @@ Topic: ${topic}`;
 
   let prompt = "";
   if (mode === "quiz") {
-    prompt = `GENERATE: 1 High-Discrimination Multiple Choice Question on "${topic}". 
+    prompt = `GENERATE: 5 High-Discrimination Multiple Choice Questions on "${topic}". 
 - Difficulty: USMLE Step 1 / Board Level.
-- Layout: Question -> 4 Options -> Correct Answer -> Rationale.
-- Rationale MUST include: 1. Correct Mechanism, 2. Why distractors are WRONG (Distractor Analysis).
-- Response Format: JSON strictly.`;
+- Explain concisely (1-2 sentences).
+- Do NOT include any image tags in this mode.
+- Response Format: JSON strictly as an array of objects with keys: "question", "options" (array of {letter, text}), "answer" (letter string), "explanation" (short text).
+- IMPORTANT: If using LaTeX math, you MUST double escape all backslashes (e.g. \\\\sigma = \\\\frac) so it is valid JSON.`;
   } else if (mode === "explain") {
     prompt = `CONSTRUCT: "Elite Mastery Sheet" for "${topic}".
+- Layout: Use very clean hierarchies, bullet points, and highlight important clinical tips with emojis (e.g., 💡, ⚡, 🧬, 🛑).
+- Elements: Short, punchy sentences instead of long paragraphs. 
 - Section 1: Molecular Architecture (Ion kinetics/receptors).
 - Section 2: Physiological Feedback Integration.
 - Section 3: Comparative Table (Physiology vs. Specific Pathology).
 - Section 4: Clinical Discriminants (Why it matters for an Elite Doctor).
-- Style: Dense, Tabular, Precise.`;
+- Style: Highly scannable, visually appealing with Markdown bullet points and bold terms.`;
+  } else if (mode === "flashcard") {
+    prompt = `GENERATE: 10 Mechanistic Flashcards for "${topic}".
+- Front: A precise physiological question or phenomenon.
+- Back: The complete mechanistic explanation (The Core "Why").
+- Reasoning: Why this is a high-yield concept for elite students.
+- Response Format: JSON strictly as an array of objects. Example: [{"front": "Q...", "back": "A...", "reasoning": "R..."}]
+- IMPORTANT: If using LaTeX math, you MUST double escape all backslashes (e.g. \\\\sigma = \\\\frac) so it is valid JSON.`;
   } else {
     prompt = `DECONSTRUCT: Clinical Case Study for "${topic}".
 - Presentation: Complex multisystem case.
@@ -66,7 +115,7 @@ Topic: ${topic}`;
 - Mastery Questions: 3 high-level questions on 'How would the $V_m$ change if...' or 'Effect of blocker X...'.`;
   }
 
-  const response = await fetch("/api/gemini", {
+  const response = await fetchWithRetry("/api/gemini", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -75,7 +124,10 @@ Topic: ${topic}`;
       model: MODELS.FLASH,
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
-        responseMimeType: mode === "quiz" ? "application/json" : "text/plain",
+        responseMimeType:
+          mode === "quiz" || mode === "flashcard"
+            ? "application/json"
+            : "text/plain",
       },
       systemInstruction: { parts: [{ text: systemInstruction }] },
     }),

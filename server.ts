@@ -50,7 +50,9 @@ async function startServer() {
       res.json({ text: result.text });
     } catch (error: any) {
       console.error("Gemini Proxy Error:", error);
-      res.status(500).json({ error: error.message || "Failed to generate content" });
+      const isRateLimited = error.message?.includes("429") || error.message?.includes("Quota");
+      const statusCode = isRateLimited ? 429 : 500;
+      res.status(statusCode).json({ error: error.message || "Failed to generate content" });
     }
   });
 

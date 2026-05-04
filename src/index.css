@@ -1,11 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Outfit", "IBM Plex Sans Thai", ui-sans-serif, system-ui, sans-serif;
+  --font-sans:
+    "Outfit", "IBM Plex Sans Thai", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --font-serif: "EB Garamond", serif;
-  
+
   --color-gemini-blue: #1e90ff;
   --color-gemini-purple: #8a2be2;
   --color-gemini-cyan: #00f5ff;
@@ -21,7 +22,7 @@
     --card-bg: rgba(255, 255, 255, 0.05);
     --card-border: rgba(255, 255, 255, 0.1);
     --accent-glow: rgba(30, 144, 255, 0.3);
-    --secondary-text: rgba(255, 255, 255, 0.6);
+    --secondary-text: rgba(255, 255, 255, 0.85); /* Increased contrast */
     --header-text: #00f5ff;
     --elite-accent: #f59e0b;
     --elite-bg: rgba(245, 158, 11, 0.05);
@@ -39,7 +40,8 @@
     --elite-bg: #fef3c7;
   }
 
-  html, body {
+  html,
+  body {
     @apply bg-[var(--app-bg)] text-[var(--app-text)] antialiased overflow-x-hidden font-sans transition-colors duration-300;
     font-feature-settings: "ss01", "ss02", "cv01";
   }
@@ -59,9 +61,18 @@
 @layer utilities {
   .gemini-gradient {
     transition: background 0.3s ease;
-    background: radial-gradient(circle at 0% 0%, rgba(30, 144, 255, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 100% 100%, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
-                var(--app-bg);
+    background:
+      radial-gradient(
+        circle at 0% 0%,
+        rgba(30, 144, 255, 0.15) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 100% 100%,
+        rgba(138, 43, 226, 0.15) 0%,
+        transparent 50%
+      ),
+      var(--app-bg);
   }
 
   .glass-card {
@@ -89,6 +100,19 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600;
   }
 
+  .light .text-gemini-cyan {
+    color: #2563eb !important;
+  }
+  .light .bg-gemini-cyan {
+    background-color: #2563eb !important;
+  }
+  .light .border-gemini-cyan {
+    border-color: #2563eb !important;
+  }
+  .light .text-gemini-blue {
+    color: #1d4ed8 !important;
+  }
+
   .gemini-glow {
     box-shadow: 0 0 40px -10px var(--accent-glow);
   }
@@ -102,13 +126,34 @@
   }
 
   @keyframes fade-in {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
   }
 
   /* Markdown Sheet Styling */
@@ -116,39 +161,49 @@
     @apply space-y-6 overflow-visible;
     color: var(--app-text);
   }
-  .study-sheet h1, .study-sheet h2 {
+  .study-sheet h1,
+  .study-sheet h2 {
     color: var(--header-text);
     @apply font-extrabold border-none pb-0 mt-10 mb-6 flex items-center gap-2 text-2xl md:text-3xl tracking-tight;
+  }
+  .light .study-sheet h1,
+  .light .study-sheet h2 {
+    color: #0f172a !important;
   }
   .study-sheet h3 {
     color: var(--header-text);
     @apply font-bold mt-8 mb-4 text-xl md:text-2xl;
   }
+  .light .study-sheet h3 {
+    color: #1e293b !important;
+  }
   .study-sheet p {
     @apply leading-relaxed mb-6;
-    color: var(--secondary-text);
+    color: var(--app-text); /* Use main text color for paragraphs */
   }
   .light .study-sheet p {
-    color: #1e293b;
-    @apply font-medium;
+    color: #334155 !important;
+    @apply font-medium leading-relaxed;
   }
   .study-sheet strong {
-    color: var(--app-text);
+    color: var(--header-text);
     @apply font-bold;
   }
   .light .study-sheet strong {
-    color: #0f172a;
-    @apply font-extrabold;
+    color: #0f172a !important;
+    @apply font-bold;
+    text-shadow: none;
   }
   .study-sheet em {
     color: var(--header-text);
     @apply italic not-italic font-medium;
   }
   .light .study-sheet em {
-    color: #1d4ed8;
-    @apply font-bold border-b border-blue-200;
+    color: #1d4ed8 !important;
+    @apply font-bold border-b-2 border-blue-100;
   }
-  .study-sheet ul, .study-sheet ol {
+  .study-sheet ul,
+  .study-sheet ol {
     @apply ml-4 space-y-4 my-6;
   }
   .study-sheet li {
@@ -156,7 +211,7 @@
     color: var(--secondary-text);
   }
   .light .study-sheet li {
-    color: #334155;
+    color: #1e293b !important;
     @apply font-medium;
   }
   .study-sheet li::before {
@@ -209,6 +264,9 @@
     border: 1px solid var(--card-border);
     display: block;
   }
+  .light .study-sheet img {
+    @apply bg-transparent shadow-none border-gray-200;
+  }
   .study-sheet img::before {
     content: "📷 Physiology Visualization Loading/Missing...";
     @apply flex items-center justify-center w-full h-[150px] text-gray-500 text-xs rounded-2xl border border-dashed;
@@ -225,5 +283,92 @@
   }
   .study-sheet .katex {
     color: var(--header-text);
+  }
+  .light .study-sheet .katex {
+    color: #0f172a !important;
+  }
+
+  .light
+    div#root:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > span:nth-of-type(2),
+  .light
+    div#root:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > h2:nth-of-type(1),
+  .light
+    div#root:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > ul:nth-of-type(1)
+    > li:nth-of-type(1)
+    > strong:nth-of-type(1),
+  .light
+    div#root:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > ul:nth-of-type(1)
+    > li:nth-of-type(2)
+    > strong:nth-of-type(1),
+  .light
+    div#root:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > ul:nth-of-type(1)
+    > li:nth-of-type(1)
+    > span:nth-of-type(1)
+    > span:nth-of-type(2)
+    > span:nth-of-type(1)
+    > span:nth-of-type(2) {
+    color: #0f172a !important;
+  }
+
+  .light
+    div#root:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(2)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(2)
+    > button:nth-of-type(1)
+    > svg:nth-of-type(1)
+    > path:nth-of-type(1),
+  .light
+    div#root:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(2)
+    > div:nth-of-type(1)
+    > div:nth-of-type(1)
+    > div:nth-of-type(2)
+    > button:nth-of-type(1)
+    > svg:nth-of-type(1) {
+    color: #1d4ed8 !important;
+    stroke: #1d4ed8 !important;
+    fill: currentColor !important;
   }
 }
