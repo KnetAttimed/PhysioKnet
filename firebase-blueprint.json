@@ -1,0 +1,22 @@
+{
+  "entities": {
+    "UserProgress": {
+      "title": "User Progress",
+      "description": "Tracks the topics a user has learned.",
+      "type": "object",
+      "properties": {
+        "learnedTopics": {
+          "type": "array",
+          "description": "List of topic identifiers the user has completed",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "users/{userId}/progress/main": {
+      "schema": { "$ref": "#/entities/UserProgress" },
+      "description": "A single document tracking progress for the user."
+    }
+  }
+}

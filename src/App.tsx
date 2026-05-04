@@ -74,6 +74,9 @@ import { CURRICULUM, Section, Chapter } from "./data/curriculum";
 import { generateStudyContent, QuizQuestion, Flashcard } from "./lib/gemini";
 
 import { MasterySearch } from "./components/MasterySearch";
+import { LoginScreen } from "./components/LoginScreen";
+import { auth, logOut } from "./lib/firebase";
+import { onAuthStateChanged, User } from "firebase/auth";
 
 type View = "home" | "section" | "learn";
 type Mode = "quiz" | "explain" | "case" | "flashcard";
@@ -97,6 +100,28 @@ export default function App() {
   const [view, setView] = useState<View>("home");
   const [theme, setTheme] = useState<"dark" | "light">("light");
   const [selectedSection, setSelectedSection] = useState<Section | null>(null);
+  
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [learnedTopics, setLearnedTopics] = useState<string[]>([]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthLoading(false);
+      
+      if (currentUser) {
+        import("./lib/firebase").then(({ subscribeToProgress }) => {
+          subscribeToProgress(currentUser.uid, (topics) => {
+            setLearnedTopics(topics);
+          });
+        });
+      } else {
+        setLearnedTopics([]);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (theme === "light") {
@@ -519,6 +544,18 @@ export default function App() {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[var(--app-bg)] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-gemini-blue border-t-transparent flex-shrink-0 animate-spin rounded-full" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
+
   return (
     <div className="min-h-screen font-sans selection:bg-gemini-blue/30 selection:text-[var(--app-text)] gemini-gradient">
       <AnimatePresence mode="wait">
@@ -546,8 +583,16 @@ export default function App() {
               selectedSection ? (
                 <SectionView
                   section={selectedSection}
+                  learnedTopics={learnedTopics}
                   onBack={() => navigate("/")}
                   onTopicSelect={setTopicModal}
+                  onToggleLearned={async (chapterId: string, topicName: string, isLearned: boolean) => {
+                    if (user) {
+                      const { toggleLearnedTopic } = await import("./lib/firebase");
+                      const topicKey = `${selectedSection.id}::${chapterId}::${topicName}`;
+                      await toggleLearnedTopic(user.uid, topicKey, isLearned);
+                    }
+                  }}
                   onFastStart={(chapter, topic, mode) =>
                     navigate(
                       `/learn/${selectedSection.id}/${chapter.id}/${encodeURIComponent(topic)}/${mode}`,
@@ -612,6 +657,8 @@ function HomeView({
   onSelectSection: (s: Section) => void;
   onSearchSelect: (s: Section, c: Chapter, t: string) => void;
 }) {
+  const currentUser = auth.currentUser;
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -620,13 +667,38 @@ function HomeView({
       className="max-w-7xl mx-auto px-6 py-8 md:py-12"
     >
       <header className="mb-10 md:mb-16">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 bg-gemini-blue rounded-xl flex items-center justify-center animate-pulse shadow-[0_0_20px_rgba(30,144,255,0.5)]">
-            <Sparkles className="w-6 h-6 text-white" />
+        <div className="flex items-center justify-between mb-12">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gemini-blue rounded-xl flex items-center justify-center animate-pulse shadow-[0_0_20px_rgba(30,144,255,0.5)]">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <span className="font-sans text-[10px] tracking-[0.3em] text-gemini-cyan uppercase font-bold">
+              Knet Attimed
+            </span>
           </div>
-          <span className="font-sans text-[10px] tracking-[0.3em] text-gemini-cyan uppercase font-bold">
-            Knet Attimed
-          </span>
+          
+          {currentUser && (
+            <div className="flex items-center gap-4 glass-card px-4 py-2 rounded-full shadow-lg">
+              <div className="flex flex-col items-end hidden md:flex">
+                <span className="text-xs font-bold text-[var(--app-text)]">{currentUser.displayName || "User"}</span>
+                <span className="text-[10px] text-[var(--secondary-text)]">{currentUser.email}</span>
+              </div>
+              {currentUser.photoURL ? (
+                <img src={currentUser.photoURL} alt="Profile" className="w-10 h-10 rounded-full border-2 border-gemini-cyan" />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gemini-blue flex items-center justify-center text-white font-bold">
+                  {currentUser.displayName?.[0] || "U"}
+                </div>
+              )}
+              <div className="w-[1px] h-6 bg-gray-300 dark:bg-gray-700 mx-2" />
+              <button 
+                onClick={() => logOut()}
+                className="text-xs font-bold text-red-500 hover:text-red-400 uppercase tracking-wider"
+              >
+                Log Out
+              </button>
+            </div>
+          )}
         </div>
         <h1 className="text-4xl md:text-8xl font-extrabold text-gradient mb-4 tracking-tight font-sans">
           KnetPhysio 🧠✨
@@ -670,7 +742,7 @@ function HomeView({
   );
 }
 
-function SectionView({ section, onBack, onTopicSelect, onFastStart }: any) {
+function SectionView({ section, learnedTopics, onBack, onTopicSelect, onToggleLearned, onFastStart }: any) {
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -730,15 +802,35 @@ function SectionView({ section, onBack, onTopicSelect, onFastStart }: any) {
                   Standard Curriculum (Berne & Levy)
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {chapter.topics?.map((topic, i) => (
-                    <button
-                      key={i}
-                      onClick={() => onTopicSelect({ chapter, topic })}
-                      className="group px-4 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-sm text-[var(--secondary-text)] hover:bg-gemini-blue/10 hover:text-gemini-blue transition-all hover:border-gemini-blue/30 font-sans"
-                    >
-                      {topic}
-                    </button>
-                  ))}
+                  {chapter.topics?.map((topic: string, i: number) => {
+                    const topicKey = `${section.id}::${chapter.id}::${topic}`;
+                    const isLearned = learnedTopics?.includes(topicKey);
+                    return (
+                      <div key={i} className="flex items-stretch rounded-xl border overflow-hidden transition-all group shadow-sm bg-[var(--card-bg)] hover:border-gemini-blue/30 focus-within:border-gemini-blue/50" 
+                           style={{ borderColor: isLearned ? 'rgba(16, 185, 129, 0.4)' : 'var(--card-border)' }}>
+                        <button
+                          onClick={() => onTopicSelect({ chapter, topic })}
+                          className={`flex-1 px-4 py-2 text-sm transition-all font-sans flex items-center gap-2
+                            ${isLearned ? 'bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 font-medium' : 'text-[var(--secondary-text)] hover:bg-gemini-blue/10 hover:text-gemini-blue'}`}
+                        >
+                          {topic}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleLearned(chapter.id, topic, !isLearned);
+                          }}
+                          className={`px-3 flex items-center justify-center transition-colors border-l
+                            ${isLearned ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border-emerald-500/20' : 'bg-transparent hover:bg-gray-500/10 text-gray-400 border-[var(--card-border)]'}`}
+                          title={isLearned ? "Unmark as learned" : "Mark as learned"}
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -749,17 +841,37 @@ function SectionView({ section, onBack, onTopicSelect, onFastStart }: any) {
                     Elite Mechanistic Deep-Dive (Boron & Boulpaep)
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {chapter.eliteTopics.map((topic, i) => (
-                      <button
-                        key={i}
-                        onClick={() => onTopicSelect({ chapter, topic })}
-                        className="group px-4 py-2 bg-[var(--elite-bg)] border border-[var(--elite-accent)]/20 rounded-xl text-sm text-[var(--elite-accent)] hover:bg-[var(--elite-accent)]/20 transition-all hover:border-[var(--elite-accent)]/40 font-sans flex items-center gap-2"
-                      >
-                        <div className="w-1 h-1 bg-[var(--elite-accent)] rounded-full" />
-                        {topic}{" "}
-                        <Zap className="w-3 h-3 text-amber-500 fill-amber-500 inline" />
-                      </button>
-                    ))}
+                    {chapter.eliteTopics.map((topic: string, i: number) => {
+                      const topicKey = `${section.id}::${chapter.id}::${topic}`;
+                      const isLearned = learnedTopics?.includes(topicKey);
+                      return (
+                        <div key={i} className="flex items-stretch rounded-xl border overflow-hidden transition-all group shadow-sm bg-[var(--elite-bg)] hover:border-[var(--elite-accent)]/40 focus-within:border-[var(--elite-accent)]/50" 
+                             style={{ borderColor: isLearned ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.2)' }}>
+                          <button
+                            onClick={() => onTopicSelect({ chapter, topic })}
+                            className={`flex-1 px-4 py-2 text-sm transition-all font-sans flex items-center gap-2
+                              ${isLearned ? 'bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 font-medium' : 'text-[var(--elite-accent)] hover:bg-[var(--elite-accent)]/20'}`}
+                          >
+                            <div className={`w-1 h-1 rounded-full ${isLearned ? 'bg-emerald-500' : 'bg-[var(--elite-accent)]'}`} />
+                            {topic}{" "}
+                            {!isLearned && <Zap className="w-3 h-3 text-amber-500 fill-amber-500 inline" />}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onToggleLearned(chapter.id, topic, !isLearned);
+                            }}
+                            className={`px-3 flex items-center justify-center transition-colors border-l
+                              ${isLearned ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border-emerald-500/20' : 'bg-transparent hover:bg-amber-500/10 text-amber-500/60 border-amber-500/20'}`}
+                            title={isLearned ? "Unmark as learned" : "Mark as learned"}
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
