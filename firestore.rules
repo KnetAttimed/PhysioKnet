@@ -18,10 +18,17 @@ service cloud.firestore {
       // Users can only read and write their own progress
       allow read: if isOwner(userId);
       
-      allow update, create: if isOwner(userId)
-        && request.resource.data.keys().hasOnly(['learnedTopics'])
-        && request.resource.data.learnedTopics is list;
-      
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasAll(['learnedTopics'])
+        && request.resource.data.keys().size() == 1
+        && request.resource.data.learnedTopics is list
+        && request.resource.data.learnedTopics.size() <= 5000;
+
+      allow update: if isOwner(userId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['learnedTopics'])
+        && request.resource.data.learnedTopics is list
+        && request.resource.data.learnedTopics.size() <= 5000;
+        
       allow delete: if isOwner(userId);
     }
   }

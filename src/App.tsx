@@ -106,13 +106,20 @@ export default function App() {
   const [learnedTopics, setLearnedTopics] = useState<string[]>([]);
 
   useEffect(() => {
+    let progressUnsubscribe: (() => void) | undefined;
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
       
+      if (progressUnsubscribe) {
+        progressUnsubscribe();
+        progressUnsubscribe = undefined;
+      }
+
       if (currentUser) {
         import("./lib/firebase").then(({ subscribeToProgress }) => {
-          subscribeToProgress(currentUser.uid, (topics) => {
+          progressUnsubscribe = subscribeToProgress(currentUser.uid, (topics) => {
             setLearnedTopics(topics);
           });
         });
@@ -120,7 +127,13 @@ export default function App() {
         setLearnedTopics([]);
       }
     });
-    return () => unsubscribe();
+
+    return () => {
+      unsubscribe();
+      if (progressUnsubscribe) {
+        progressUnsubscribe();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -623,6 +636,14 @@ export default function App() {
                   onSwitchMode={switchMode}
                   onBack={() => navigate(`/section/${selectedSection.id}`)}
                   scrollRef={scrollRef}
+                  learnedTopics={learnedTopics}
+                  onToggleLearned={async (chapterId: string, topicName: string, isLearned: boolean) => {
+                    if (user) {
+                      const { toggleLearnedTopic } = await import("./lib/firebase");
+                      const topicKey = `${selectedSection.id}::${chapterId}::${topicName}`;
+                      await toggleLearnedTopic(user.uid, topicKey, isLearned);
+                    }
+                  }}
                 />
               ) : (
                 <div />
@@ -743,6 +764,11 @@ function HomeView({
 }
 
 function SectionView({ section, learnedTopics, onBack, onTopicSelect, onToggleLearned, onFastStart }: any) {
+  const allTopicsCount = section.chapters?.reduce((acc: number, chapter: any) => 
+     acc + (chapter.topics?.length || 0) + (chapter.eliteTopics?.length || 0), 0) || 0;
+  const learnedTopicsInSection = (learnedTopics || []).filter((id: string) => id.startsWith(`${section.id}::`)).length;
+  const sectionProgress = allTopicsCount === 0 ? 0 : Math.round((learnedTopicsInSection / allTopicsCount) * 100);
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -757,31 +783,74 @@ function SectionView({ section, learnedTopics, onBack, onTopicSelect, onToggleLe
         <ChevronLeft className="w-4 h-4" /> Back to Dashboard 🏠
       </button>
 
-      <div className="flex items-center gap-4 mb-2">
-        <span className="text-3xl md:text-4xl">{section.icon}</span>
-        <span className="font-sans text-[10px] md:text-xs text-gemini-cyan tracking-widest uppercase">
-          Section {section.section} 📁
-        </span>
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-12 gap-6">
+        <div>
+          <div className="flex items-center gap-4 mb-2">
+            <span className="text-3xl md:text-4xl">{section.icon}</span>
+            <span className="font-sans text-[10px] md:text-xs text-gemini-cyan tracking-widest uppercase">
+              Section {section.section} 📁
+            </span>
+          </div>
+          <h2 className="text-3xl md:text-5xl font-extrabold text-gradient font-sans leading-tight">
+            {section.title}
+          </h2>
+        </div>
+
+        {allTopicsCount > 0 && (
+          <div className="flex flex-col md:items-end shrink-0">
+            <div className="text-[10px] uppercase tracking-widest text-[var(--secondary-text)] font-sans mb-2">
+              Section Progress • {learnedTopicsInSection} / {allTopicsCount}
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-full md:w-32 h-2 bg-[var(--card-border)] rounded-full overflow-hidden shrink-0">
+                <div 
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-500 ease-out" 
+                  style={{ width: `${sectionProgress}%` }}
+                />
+              </div>
+              <span className="text-sm font-bold text-emerald-500 font-sans min-w-[36px] text-right">
+                {sectionProgress}%
+              </span>
+            </div>
+          </div>
+        )}
       </div>
-      <h2 className="text-3xl md:text-5xl font-extrabold mb-8 md:mb-12 text-gradient font-sans leading-tight">
-        {section.title}
-      </h2>
 
       <div className="space-y-4 md:space-y-6">
-        {section.chapters?.map((chapter: Chapter) => (
-          <div
-            key={chapter.id}
-            className="glass-card rounded-2xl md:rounded-3xl p-6 md:p-8 hover:border-[var(--card-border)] transition-colors"
-          >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-8 border-b border-[var(--card-border)] pb-6">
-              <div className="flex-1">
-                <div className="font-sans text-[10px] text-[var(--secondary-text)] uppercase mb-1">
-                  Chapter {chapter.num}
+        {section.chapters?.map((chapter: any) => {
+          const chapterTopicsCount = (chapter.topics?.length || 0) + (chapter.eliteTopics?.length || 0);
+          const learnedTopicsInChapter = (learnedTopics || []).filter((id: string) => id.startsWith(`${section.id}::${chapter.id}::`)).length;
+          const chapterProgress = chapterTopicsCount === 0 ? 0 : Math.round((learnedTopicsInChapter / chapterTopicsCount) * 100);
+
+          return (
+            <div
+              key={chapter.id}
+              className="glass-card rounded-2xl md:rounded-3xl p-6 md:p-8 hover:border-[var(--card-border)] transition-colors"
+            >
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-8 border-b border-[var(--card-border)] pb-6">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="font-sans text-[10px] text-[var(--secondary-text)] uppercase">
+                      Chapter {chapter.num}
+                    </div>
+                    {chapterTopicsCount > 0 && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1 bg-[var(--card-border)] rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-emerald-500 rounded-full transition-all duration-500 ease-out" 
+                            style={{ width: `${chapterProgress}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] font-sans text-emerald-500 font-bold">
+                          {chapterProgress}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <h4 className="text-xl md:text-2xl font-bold text-[var(--app-text)] leading-tight font-sans">
+                    {chapter.title}
+                  </h4>
                 </div>
-                <h4 className="text-xl md:text-2xl font-bold text-[var(--app-text)] leading-tight font-sans">
-                  {chapter.title}
-                </h4>
-              </div>
               <div className="flex gap-2">
                 <button
                   onClick={() =>
@@ -877,7 +946,8 @@ function SectionView({ section, learnedTopics, onBack, onTopicSelect, onToggleLe
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </motion.div>
   );
@@ -978,7 +1048,12 @@ function LearnView({
   onSwitchMode,
   onBack,
   scrollRef,
+  learnedTopics,
+  onToggleLearned,
 }: any) {
+  const topicKey = `${section?.id}::${chapter?.id}::${topic}`;
+  const isLearned = learnedTopics?.includes(topicKey);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -999,11 +1074,25 @@ function LearnView({
               <div className="font-sans text-[8px] md:text-[10px] text-[var(--secondary-text)] uppercase tracking-widest leading-none mb-1">
                 {section.title} / Ch.{chapter.num}
               </div>
-              <h3 className="text-lg md:text-xl font-bold text-[var(--app-text)] leading-none font-sans truncate max-w-[200px] md:max-w-none flex items-center gap-2">
+              <h3 className="text-lg md:text-xl font-bold text-[var(--app-text)] leading-none font-sans flex items-center gap-2">
                 {topic}
                 {chapter.eliteTopics?.includes(topic) && (
                   <Zap className="w-4 h-4 text-amber-500 fill-amber-500 animate-pulse" />
                 )}
+                <button
+                  onClick={() => onToggleLearned(chapter.id, topic, !isLearned)}
+                  className={`ml-2 p-1 md:p-1.5 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 ${
+                    isLearned
+                      ? "bg-[rgba(16,185,129,0.2)] text-[rgb(16,185,129)] hover:bg-[rgba(16,185,129,0.3)]"
+                      : "bg-[var(--card-border)] text-[var(--secondary-text)] hover:opacity-80"
+                  }`}
+                  title={isLearned ? "Marked as learned (Click to unmark)" : "Mark as learned"}
+                  aria-label={isLearned ? "Unmark as learned" : "Mark as learned"}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isLearned ? "3" : "2"} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 md:w-5 md:h-5">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </button>
               </h3>
             </div>
           </div>
