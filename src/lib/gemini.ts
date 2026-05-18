@@ -95,12 +95,13 @@ Topic: ${topic}`;
   } else if (mode === "explain") {
     prompt = `CONSTRUCT: "Elite Mastery Sheet" for "${topic}".
 - Layout: Use very clean hierarchies, bullet points, and highlight important clinical tips with emojis (e.g., 💡, ⚡, 🧬, 🛑).
-- Elements: Short, punchy sentences instead of long paragraphs. 
+- Elements: Short, punchy sentences instead of long paragraphs. Use arrows (e.g., -> , =>) to show step-by-step mechanisms, causality, or cascades clearly.
+- Formatting: Prefer using markdown tables to summarize and compare data to make the content extremely easy to digest.
 - Section 1: Molecular Architecture (Ion kinetics/receptors).
 - Section 2: Physiological Feedback Integration.
 - Section 3: Comparative Table (Physiology vs. Specific Pathology).
 - Section 4: Clinical Discriminants (Why it matters for an Elite Doctor).
-- Style: Highly scannable, visually appealing with Markdown bullet points and bold terms.`;
+- Style: Highly scannable, visually appealing, easy to digest with Markdown bullet points, flow arrows, and bold terms.`;
   } else if (mode === "flashcard") {
     prompt = `GENERATE: 10 Mechanistic Flashcards for "${topic}".
 - Front: A precise physiological question or phenomenon.
