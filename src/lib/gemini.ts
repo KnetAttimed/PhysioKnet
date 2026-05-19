@@ -16,6 +16,12 @@ export interface Flashcard {
   reasoning: string;
 }
 
+export interface TFQuestion {
+  question: string;
+  answer: boolean;
+  explanation: string;
+}
+
 async function fetchWithRetry(
   url: string,
   options: RequestInit,
@@ -64,6 +70,7 @@ Core Directives:
 Language & Formatting:
 - Respond in Thai (ภาษาไทย) for flow, but ALL Technical/Medical terms MUST remain in English.
 - LaTeX for EVERYTHING quantitative ($pCO_2$, $Na^+/K^+$-ATPase, $\Delta G$).
+- **CRITICAL TYPOGRAPHY RULE**: DO NOT wrap regular Thai text inside LaTeX $...$ delimiters. Only use $...$ for equations, variables, and chemical formulas. If you put standard text inside $...$, the platform will break the font.
 - Emojis: Only ⚡ (High-Yield), 🧬 (Molecular), 🏥 (Clinical). Max 1 per section.
 - **ARROW RULE**: NEVER use arrow emojis (⬆️, ⬇️) in clusters. Use clear English terms like "(Increased)" or "(Decreased)" if the direction is critical.
 - **HEADER RULE**: Use standard markdown headers ONLY (e.g., "### Header Name"). NEVER put hashes at the end of a line (e.g., "### Title ###" is FORBIDDEN).
@@ -141,4 +148,49 @@ Topic: ${topic}`;
 
   const data = await response.json();
   return data.text;
+}
+
+export async function generateTFQuiz(subjects: string, numQuestions: number): Promise<TFQuestion[]> {
+  const systemInstruction = `You are the "Master Physiology Architect" for KnetPhysio. Your mission is to train the top 0.1% medical candidates using maximum intellectual density.
+
+Core Directives:
+1. **Zero Fluff**: Skip all greetings, transitions, and concluding summaries. Every word must serve a mechanistic purpose.
+2. **Intellectual Brutality**: Use advanced language. Replace basic words with medical precision (e.g., use 'sequester' instead of 'keep', 'potentiate' instead of 'increase').
+3. **Physio-Chemical Integration**: You MUST integrate Molecular Biology, Biophysics, and Clinical Medicine into a unified thread.
+
+Language & Formatting:
+- Respond in Thai (ภาษาไทย) for flow, but ALL Technical/Medical terms MUST remain in English.
+- LaTeX for EVERYTHING quantitative ($pCO_2$, $Na^+/K^+$-ATPase, $\Delta G$).
+- **CRITICAL TYPOGRAPHY RULE**: DO NOT wrap regular Thai text inside LaTeX $...$ delimiters. Only use $...$ for equations, variables, and chemical formulas. If you put standard text inside $...$, the platform will break the font.`;
+
+  const prompt = `GENERATE: ${numQuestions} True/False questions for the following topics: 
+${subjects}
+
+- Difficulty: USMLE Step 1 / Board Level.
+- Concise explanation (1-2 sentences).
+- Response Format: JSON strictly as an array of objects with keys: "question", "answer" (boolean), "explanation" (short text).
+- IMPORTANT: If using LaTeX math, you MUST double escape all backslashes (e.g. \\\\sigma = \\\\frac) so it is valid JSON.`;
+
+  const response = await fetchWithRetry("/api/gemini", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: MODELS.FLASH,
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        responseMimeType: "application/json",
+      },
+      systemInstruction: { parts: [{ text: systemInstruction }] },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Failed to generate content");
+  }
+
+  const data = await response.json();
+  return JSON.parse(data.text);
 }

@@ -75,6 +75,7 @@ import { generateStudyContent, QuizQuestion, Flashcard } from "./lib/gemini";
 
 import { MasterySearch } from "./components/MasterySearch";
 import { LoginScreen } from "./components/LoginScreen";
+import { TFQuizView } from "./components/TFQuizView";
 import { auth, logOut } from "./lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 
@@ -580,6 +581,7 @@ export default function App() {
             path="/"
             element={
               <HomeView
+                onSelectTF={() => navigate("/tf-quiz")}
                 onSelectSection={(s) => {
                   navigate(`/section/${s.id}`);
                 }}
@@ -589,6 +591,10 @@ export default function App() {
                 }}
               />
             }
+          />
+          <Route
+            path="/tf-quiz"
+            element={<TFQuizView onBack={() => navigate("/")} />}
           />
           <Route
             path="/section/:sectionId"
@@ -674,9 +680,11 @@ export default function App() {
 function HomeView({
   onSelectSection,
   onSearchSelect,
+  onSelectTF,
 }: {
   onSelectSection: (s: Section) => void;
   onSearchSelect: (s: Section, c: Chapter, t: string) => void;
+  onSelectTF: () => void;
 }) {
   const currentUser = auth.currentUser;
   
@@ -758,6 +766,29 @@ function HomeView({
             <div className="absolute bottom-0 left-0 h-1 bg-gemini-blue transition-all duration-500 group-hover:w-full w-0" />
           </button>
         ))}
+
+        <button
+          onClick={onSelectTF}
+          className="group relative glass-card glass-card-hover p-6 md:p-8 rounded-2xl md:rounded-3xl text-left overflow-hidden border border-amber-500/30 hover:border-amber-400 transition-all bg-amber-500/5 hover:bg-amber-500/10"
+        >
+          <div className="absolute top-0 right-0 w-24 md:w-32 h-24 md:h-32 bg-gradient-to-br from-amber-500/20 to-transparent rounded-bl-full translate-x-8 -translate-y-8 group-hover:scale-110 transition-transform" />
+          <div className="text-3xl md:text-4xl mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-500 flex items-center">
+            <span className="text-amber-500 fill-amber-500"><Zap /></span>
+          </div>
+          <div className="font-sans text-[8px] md:text-[10px] tracking-widest text-amber-500 uppercase mb-1 md:mb-2 font-bold">
+            Section VIII
+          </div>
+          <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-amber-500 group-hover:text-amber-400 transition-colors font-sans leading-tight">
+            True / False Sprint
+          </h3>
+          <div className="flex items-center justify-between text-[10px] md:text-sm text-amber-500/70 font-sans">
+            <span>Rapid-fire evaluation</span>
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 transition-transform text-amber-500 font-bold">
+              Start Quiz →
+            </span>
+          </div>
+          <div className="absolute bottom-0 left-0 h-1 bg-amber-500 transition-all duration-500 group-hover:w-full w-0" />
+        </button>
       </div>
     </motion.div>
   );
