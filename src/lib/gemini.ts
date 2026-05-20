@@ -151,25 +151,29 @@ Topic: ${topic}`;
 }
 
 export async function generateTFQuiz(subjects: string, numQuestions: number): Promise<TFQuestion[]> {
-  const systemInstruction = `You are the "Master Physiology Architect" for KnetPhysio. Your mission is to train the top 0.1% medical candidates using maximum intellectual density.
+  const systemInstruction = `You are the "Master Physiology Architect" for KnetPhysio. Your mission is to train the top candidates for the IMSPQ (Inter-Medical School Physiology Quiz).
 
 Core Directives:
-1. **Zero Fluff**: Skip all greetings, transitions, and concluding summaries. Every word must serve a mechanistic purpose.
-2. **Intellectual Brutality**: Use advanced language. Replace basic words with medical precision (e.g., use 'sequester' instead of 'keep', 'potentiate' instead of 'increase').
-3. **Physio-Chemical Integration**: You MUST integrate Molecular Biology, Biophysics, and Clinical Medicine into a unified thread.
+1. **Zero Fluff**: Skip all greetings. Every word must serve a mechanistic purpose.
+2. **IMSPQ Style**: Questions must be concise, one-line physiological statements, exactly like real IMSPQ questions. Do not make them unnecessarily wordy.
+   Examples: 
+   - "NE and serotonin affect in descending modulatory pain pathway"
+   - "Anticholinergic improve memory in dementia" 
+   - "Hypocalcemia cause muscle spasm"
+   - "Digoxin increase intracellular Ca2+ by inhibiting Na+K+ATPase"
 
 Language & Formatting:
-- Respond in Thai (ภาษาไทย) for flow, but ALL Technical/Medical terms MUST remain in English.
-- LaTeX for EVERYTHING quantitative ($pCO_2$, $Na^+/K^+$-ATPase, $\Delta G$).
-- **CRITICAL TYPOGRAPHY RULE**: DO NOT wrap regular Thai text inside LaTeX $...$ delimiters. Only use $...$ for equations, variables, and chemical formulas. If you put standard text inside $...$, the platform will break the font.`;
+- The "question" field MUST be in English only, written as a short declarative statement.
+- The "explanation" field MUST be in Thai (with English technical terms) for easy understanding.
+- FORMAT STRICTLY AS PLAINTEXT. DO NOT use bold (**), italics (*), or any other markdown text formatting.
+- DO NOT use LaTeX ($...$) under any circumstances, even for formulas, write them out normally (e.g. pCO2, Na+/K+-ATPase).`;
 
   const prompt = `GENERATE: ${numQuestions} True/False questions for the following topics: 
 ${subjects}
 
-- Difficulty: USMLE Step 1 / Board Level.
-- Concise explanation (1-2 sentences).
-- Response Format: JSON strictly as an array of objects with keys: "question", "answer" (boolean), "explanation" (short text).
-- IMPORTANT: If using LaTeX math, you MUST double escape all backslashes (e.g. \\\\sigma = \\\\frac) so it is valid JSON.`;
+- Difficulty: IMSPQ Competition Level (expert, deep physiological mechanisms).
+- Concise explanation (1-2 sentences in Thai without markdown).
+- Response Format: JSON strictly as an array of objects with keys: "question" (English statement), "answer" (boolean), "explanation" (Thai plaintext).`;
 
   const response = await fetchWithRetry("/api/gemini", {
     method: "POST",

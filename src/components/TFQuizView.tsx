@@ -3,10 +3,6 @@ import { motion, AnimatePresence } from "motion/react";
 import { ChevronLeft, Zap, Play, Check, X, ShieldAlert } from "lucide-react";
 import { CURRICULUM, Section, Chapter } from "../data/curriculum";
 import { generateTFQuiz, TFQuestion } from "../lib/gemini";
-import ReactMarkdown from "react-markdown";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
-import "katex/dist/katex.min.css";
 
 export function TFQuizView({ onBack }: { onBack: () => void }) {
   const [setupMode, setSetupMode] = useState(true);
@@ -127,10 +123,8 @@ export function TFQuizView({ onBack }: { onBack: () => void }) {
         </div>
 
         <div className="glass-card p-8 md:p-12 rounded-3xl mb-8">
-          <div className="text-2xl md:text-3xl font-bold font-sans text-[var(--app-text)] leading-tight mb-8">
-            <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-              {q.question}
-            </ReactMarkdown>
+          <div className="text-xl md:text-2xl font-sans text-[var(--app-text)] leading-relaxed mb-8">
+            {q.question}
           </div>
           
           <div className="grid grid-cols-2 gap-4 h-32">
@@ -179,9 +173,7 @@ export function TFQuizView({ onBack }: { onBack: () => void }) {
                     {answeredState.isCorrect ? 'Correct!' : 'Incorrect'}
                   </h4>
                   <div className="text-[var(--secondary-text)] font-sans leading-relaxed text-sm md:text-base">
-                    <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                      {q.explanation}
-                    </ReactMarkdown>
+                    {q.explanation}
                   </div>
                 </div>
               </div>
